@@ -1,9 +1,12 @@
+import InteractiveBackground from "@/components/InteractiveBackground";
+
 export default function Home() {
     return (
-        <main className="min-h-screen bg-[#0f1419] text-white">
+        <main className="min-h-screen bg-[#0f1419] text-white pt-16">
             {/* Hero Section */}
-            <section className="px-6 py-20 sm:py-32 bg-gradient-to-b from-[#0f1419] via-[#1a202c] to-[#2d3748]">
-                <div className="mx-auto max-w-6xl text-center">
+            <section className="relative px-6 py-20 sm:py-32 min-h-screen overflow-hidden">
+                <InteractiveBackground />
+                <div className="relative z-10 mx-auto max-w-6xl text-center">
                     <p className="text-sm uppercase tracking-widest text-[#a0aec0] mb-6">
                         PCCoE LFDT Club
                     </p>
