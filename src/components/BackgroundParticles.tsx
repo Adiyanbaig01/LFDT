@@ -17,7 +17,7 @@ interface Particle {
 export default function BackgroundParticles() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<Particle[]>([]);
-    const animationIdRef = useRef<number>();
+    const animationIdRef = useRef<number | undefined>(undefined);
     const lastTimeRef = useRef<number>(0);
 
     useEffect(() => {

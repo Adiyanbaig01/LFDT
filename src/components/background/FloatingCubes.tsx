@@ -94,7 +94,7 @@ function ParticleCube({
         ];
 
         return {
-            particles: corners.map((corner, _) => ({
+            particles: corners.map((corner) => ({
                 basePosition: basePos.clone().add(corner),
                 currentPosition: basePos.clone().add(corner),
                 velocity: new Vector3(0, 0, 0),
