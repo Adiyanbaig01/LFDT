@@ -1,11 +1,10 @@
 "use client";
 import Orb from "@/components/Orb";
+import InteractiveBackground from "@/components/InteractiveBackground";
 import {
     Github,
     Layers,
     Database,
-    Shield,
-    Zap,
     Globe,
     ArrowRight,
     Play,
@@ -16,6 +15,8 @@ export default function Home() {
         <main className="min-h-screen bg-[#0f1419] text-white">
             {/* Hero Section */}
             <section className="relative px-6 py-20 sm:py-32 min-h-screen overflow-hidden flex items-center">
+                {/* Interactive 3D cubes and ripple background (behind everything) */}
+                <InteractiveBackground />
                 {/* Large Orb encompassing hero content */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-[1000px] h-[1000px] opacity-100">
@@ -28,7 +29,7 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div className="relative z-10 mx-auto max-w-7xl w-full text-center">
+                <div className="relative z-0 mx-auto max-w-7xl w-full text-center">
                     {/* Version Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
                         <div className="w-2 h-2 bg-[#3182ce] rounded-full animate-pulse"></div>
