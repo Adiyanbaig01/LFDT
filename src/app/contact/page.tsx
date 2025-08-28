@@ -117,7 +117,7 @@ export default function Contact() {
                             <form className="space-y-6">
                                 <div className="grid gap-6 sm:grid-cols-2">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2 font-heading">
+                                        <label className="block text-sm font-medium mb-2 font-body">
                                             First Name
                                         </label>
                                         <input
@@ -127,7 +127,7 @@ export default function Contact() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2 font-heading">
+                                        <label className="block text-sm font-medium mb-2 font-body">
                                             Last Name
                                         </label>
                                         <input
@@ -139,7 +139,7 @@ export default function Contact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 font-heading">
+                                    <label className="block text-sm font-medium mb-2 font-body">
                                         Email
                                     </label>
                                     <input
@@ -150,7 +150,7 @@ export default function Contact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 font-heading">
+                                    <label className="block text-sm font-medium mb-2 font-body">
                                         Subject
                                     </label>
                                     <select className="w-full px-4 py-3 bg-[#1a202c] border border-[#4a5568] rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body">
@@ -163,7 +163,7 @@ export default function Contact() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2 font-heading">
+                                    <label className="block text-sm font-medium mb-2 font-body">
                                         Message
                                     </label>
                                     <textarea
@@ -175,7 +175,7 @@ export default function Contact() {
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-[#3182ce] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#4299e2] transition-colors duration-200 font-heading"
+                                    className="w-full bg-[#3182ce] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#4299e2] transition-colors duration-200 font-body"
                                 >
                                     Send Message
                                 </button>

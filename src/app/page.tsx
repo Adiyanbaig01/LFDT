@@ -1,4 +1,5 @@
-import InteractiveBackground from "@/components/InteractiveBackground";
+"use client";
+import Orb from "@/components/Orb";
 import {
     Github,
     Layers,
@@ -15,7 +16,18 @@ export default function Home() {
         <main className="min-h-screen bg-[#0f1419] text-white">
             {/* Hero Section */}
             <section className="relative px-6 py-20 sm:py-32 min-h-screen overflow-hidden flex items-center">
-                <InteractiveBackground />
+                {/* Large Orb encompassing hero content */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-[1000px] h-[1000px] opacity-100">
+                        <Orb
+                            hue={15} // Blue hue matching website theme
+                            hoverIntensity={0.4}
+                            rotateOnHover={true}
+                            forceHoverState={false}
+                        />
+                    </div>
+                </div>
+
                 <div className="relative z-10 mx-auto max-w-7xl w-full text-center">
                     {/* Version Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
@@ -85,18 +97,6 @@ export default function Home() {
                                 <Database className="w-8 h-8 text-white/60" />
                                 <span className="text-sm font-medium text-white/40">
                                     Ethereum
-                                </span>
-                            </div>
-                            <div className="flex flex-col items-center gap-2">
-                                <Shield className="w-8 h-8 text-white/60" />
-                                <span className="text-sm font-medium text-white/40">
-                                    Besu
-                                </span>
-                            </div>
-                            <div className="flex flex-col items-center gap-2">
-                                <Zap className="w-8 h-8 text-white/60" />
-                                <span className="text-sm font-medium text-white/40">
-                                    Cactus
                                 </span>
                             </div>
                             <div className="flex flex-col items-center gap-2">
@@ -423,76 +423,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer
-                id="contact"
-                className="px-6 py-16 bg-[#1a202c] border-t border-[#2d3748]"
-            >
-                <div className="mx-auto max-w-6xl">
-                    <div className="grid gap-12 md:grid-cols-3">
-                        <div>
-                            <h3 className="text-2xl font-bold mb-6 text-[#3182ce]">
-                                PCCoE LFDT Club
-                            </h3>
-                            <p className="text-[#a0aec0] mb-6">
-                                Official student chapter of the Linux Foundation
-                                Decentralized Trust at Pimpri Chinchwad College
-                                of Engineering.
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="text-xl font-bold mb-6">
-                                Contact Info
-                            </h4>
-                            <div className="space-y-3 text-[#a0aec0]">
-                                <p>
-                                    <strong>Email:</strong> dummyemail@gmail.com
-                                </p>
-                                <p>
-                                    <strong>Faculty Coordinators:</strong>
-                                    <br />
-                                    Dr. Sonali Patil
-                                    <br />
-                                    Dr. Meghana Lokhande
-                                </p>
-                                <p>
-                                    <strong>Student Leads:</strong>
-                                    <br />
-                                    Varad Kulkarni
-                                    <br />
-                                    Adiyan Baig
-                                </p>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 className="text-xl font-bold mb-6">
-                                Connect With Us
-                            </h4>
-                            <div className="space-y-3">
-                                <a
-                                    href="https://instagram.com/pccoe_lfdt"
-                                    className="block text-[#a0aec0] hover:text-[#3182ce] transition-colors"
-                                >
-                                    Instagram
-                                </a>
-                                <a
-                                    href="https://www.linkedin.com/company/lfdt-student-chapter-pccoe"
-                                    className="block text-[#a0aec0] hover:text-[#3182ce] transition-colors"
-                                >
-                                    LinkedIn
-                                </a>
-                                <p className="text-[#a0aec0]">
-                                    Visit us at PCCoE campus to connect in
-                                    person
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mt-12 pt-8 border-t border-[#2d3748] text-center text-[#a0aec0]">
-                        <p>&copy; 2024 PCCoE LFDT Club. All rights reserved.</p>
-                    </div>
-                </div>
-            </footer>
+            {/* Footer moved to RootLayout */}
         </main>
     );
 }

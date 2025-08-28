@@ -3,19 +3,128 @@
 :root {
     --background: #0f1419;
     --foreground: #ffffff;
+    --font-body: "Niramit", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Arial, sans-serif;
+    --font-heading: "Electrolize", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Arial, sans-serif;
 }
 
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --font-rubik: var(--font-rubik);
+    --font-body: var(--font-body);
+    --font-heading: var(--font-heading);
+}
+
+/* Custom fonts */
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-ExtraLight.ttf") format("truetype");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-ExtraLightItalic.ttf") format("truetype");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-Light.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-LightItalic.ttf") format("truetype");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-MediumItalic.ttf") format("truetype");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-SemiBoldItalic.ttf") format("truetype");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Niramit";
+    src: url("/fonts/niramit/Niramit-BoldItalic.ttf") format("truetype");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Electrolize";
+    src: url("/fonts/electrolize/Electrolize-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
 }
 
 body {
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-rubik), -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
 }
 
 /* Custom scrollbar */
@@ -36,16 +145,26 @@ body {
     background: #4299e2;
 }
 
-/* Smooth scrolling */
+/* Smooth scrolling handled by Lenis; disable native smooth behavior */
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
 }
 
 /* Custom utilities for fonts */
 .font-heading {
-    font-family: var(--font-rubik), sans-serif;
+    font-family: var(--font-heading);
 }
 
 .font-body {
-    font-family: sans-serif;
+    font-family: var(--font-body);
+}
+
+/* Apply heading font to semantic headings by default */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
 }
