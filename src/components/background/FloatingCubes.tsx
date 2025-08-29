@@ -458,7 +458,7 @@ export default function FloatingCubesCanvas() {
     }
 
     return (
-        <div className="absolute inset-0" aria-hidden>
+        <div className="absolute inset-0 z-[15]" aria-hidden>
             <div className="absolute inset-0">
                 <Canvas
                     dpr={[1, 1.5]}

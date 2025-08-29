@@ -1,14 +1,7 @@
 "use client";
 import Orb from "@/components/Orb";
 import InteractiveBackground from "@/components/InteractiveBackground";
-import {
-    Github,
-    Layers,
-    Database,
-    Globe,
-    ArrowRight,
-    Play,
-} from "lucide-react";
+import { Github, Layers, Database, Globe, ArrowRight } from "lucide-react";
 
 export default function Home() {
     return (
@@ -18,7 +11,7 @@ export default function Home() {
                 {/* Interactive 3D cubes and ripple background (behind everything) */}
                 <InteractiveBackground />
                 {/* Large Orb encompassing hero content */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 z-[10] flex items-center justify-center pointer-events-none">
                     <div className="w-[1000px] h-[1000px] opacity-100">
                         <Orb
                             hue={15} // Blue hue matching website theme
@@ -29,50 +22,69 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div className="relative z-0 mx-auto max-w-7xl w-full text-center">
+                <div className="relative z-[30] mx-auto max-w-7xl w-full text-center">
                     {/* Version Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
                         <div className="w-2 h-2 bg-[#3182ce] rounded-full animate-pulse"></div>
                         <span className="text-sm text-white/70">
-                            New chapter launched, join us!
+                            🚀 Build-A-Thon 2025 is Here!
                         </span>
                     </div>
 
                     {/* Main Content */}
                     <div className="max-w-3xl lg:max-w-4xl mx-auto">
                         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95] mb-6">
-                            Revolutionize Trust
-                            <br />
-                            with{" "}
+                            Where{" "}
                             <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
-                                LFDT
+                                Agents
                             </span>
-                            .
+                            <br />
+                            Shape Tomorrow
                         </h1>
-                        <p className="text-lg sm:text-xl text-[#a0aec0] leading-relaxed mb-8 max-w-2xl mx-auto">
-                            Expertly crafted blockchain experiences that
-                            captivate, connect with innovative minds, and leave
-                            a lasting impact on decentralized systems.
+                        <h2 className="text-xl sm:text-2xl text-[#a0aec0] leading-relaxed mb-4 max-w-3xl mx-auto font-medium">
+                            Join us for PCCoE&apos;s first-ever{" "}
+                            <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
+                                LF
+                            </span>
+                            <span className="text-white">DT </span>
+                            Club Hackathon!
+                        </h2>
+                        <p className="text-base sm:text-lg text-[#a0aec0] leading-relaxed mb-8 max-w-2xl mx-auto">
+                            An unforgettable journey into Decentralized AI,
+                            innovation, and community collaboration. Kickstart
+                            your blockchain & AI journey with a hands-on
+                            workshop, dive into a 36-hour hackathon, and
+                            showcase your talent in front of industry experts.
+                            Whether you&apos;re a beginner or a pro, this is
+                            your chance to build, learn, and leave your mark.
                         </p>
 
                         {/* CTA Buttons */}
                         <div className="mt-2 flex items-center gap-3 justify-center">
-                            <a
-                                href="#contact"
+                            <button
+                                onClick={() => {
+                                    // Open registration link in new tab
+                                    window.open(
+                                        "https://forms.google.com/register",
+                                        "_blank"
+                                    );
+                                }}
                                 className="group inline-flex items-center gap-3 px-7 py-3.5 bg-white text-black rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                                aria-label="Join LFDT"
+                                aria-label="Register for Build-A-Thon 2025"
                             >
-                                <Play className="w-4 h-4" />
-                                <span>Join Us</span>
-                            </a>
-                            <a
-                                href="#about"
-                                className="group inline-flex items-center gap-2 px-7 py-3.5 text-white border border-white/20 rounded-full font-medium hover:bg-white/10 transition-colors"
-                                aria-label="Learn more about LFDT"
-                            >
-                                <span>Learn More</span>
+                                <span>Register Now</span>
                                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                            </a>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    window.location.href = "/events";
+                                }}
+                                className="group inline-flex items-center gap-2 px-7 py-3.5 text-white border border-white/20 rounded-full font-medium hover:bg-white/10 transition-colors"
+                                aria-label="Explore our events"
+                            >
+                                <span>Explore Events</span>
+                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                            </button>
                         </div>
                     </div>
 

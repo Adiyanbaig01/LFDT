@@ -130,7 +130,7 @@ export default function BackgroundParticles() {
         <canvas
             ref={canvasRef}
             className="absolute inset-0 pointer-events-none"
-            style={{ zIndex: 9997 }} // Behind the cubes (9998) but above content (0)
+            style={{ zIndex: 10 }} // Below cubes/dialogs, above main content
             aria-hidden="true"
         />
     );

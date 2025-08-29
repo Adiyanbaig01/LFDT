@@ -28,11 +28,11 @@ export default function Navbar() {
     ];
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-[9999] w-full">
+        <nav className="fixed top-0 left-0 right-0 z-[50] w-full">
             <div
                 className={`transition-all duration-300 ease-out ${
                     isScrolled
-                        ? "bg-white/5 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/20"
+                        ? "bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl shadow-black/20"
                         : "bg-transparent"
                 }`}
             >

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
 import DecryptedText from "@/components/DecryptedText";
 
 type Props = {
@@ -27,7 +28,7 @@ export default function CubeDialog({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9999]"
+                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[45]"
                         onClick={onClose}
                     />
                     {/* Dialog */}
@@ -62,9 +63,17 @@ export default function CubeDialog({
                                 )
                             ),
                         }}
-                        className="z-[10000] -translate-x-1/2 -translate-y-1/2"
+                        className="z-[46] -translate-x-1/2 -translate-y-1/2"
                     >
                         <div className="relative border border-[#3182ce]/60 bg-[#0f1419]/90 backdrop-blur-md p-8 w-[380px] shadow-2xl rounded-xl">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                aria-label="Close dialog"
+                                className="absolute top-3 right-3 inline-flex items-center justify-center p-2 rounded-md text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
                             {title && (
                                 <div className="text-lg font-medium text-white/90 mb-4">
                                     {title}
