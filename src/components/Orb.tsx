@@ -12,7 +12,7 @@ interface OrbProps {
 }
 
 export default function Orb({
-    hue = 0,
+    hue = 345,
     hoverIntensity = 0.2,
     rotateOnHover = true,
     forceHoverState = false,
@@ -111,9 +111,9 @@ export default function Orb({
       return vec4(colorIn.rgb / (a + 1e-5), a);
     }
     
-    const vec3 baseColor1 = vec3(0.611765, 0.262745, 0.996078);
-    const vec3 baseColor2 = vec3(0.298039, 0.760784, 0.913725);
-    const vec3 baseColor3 = vec3(0.062745, 0.078431, 0.600000);
+    const vec3 baseColor1 = vec3(0.2, 0.6, 1.0);
+    const vec3 baseColor2 = vec3(0.4, 0.8, 1.0);
+    const vec3 baseColor3 = vec3(0.1, 0.3, 0.8);
     const float innerRadius = 0.6;
     const float noiseScale = 0.65;
     
