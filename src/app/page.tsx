@@ -22,7 +22,7 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div className="relative z-[30] mx-auto max-w-7xl w-full text-center">
+                <div className="relative z-[30] mx-auto max-w-4xl w-full text-center">
                     {/* Version Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
                         <div className="w-2 h-2 bg-[#3182ce] rounded-full animate-pulse"></div>
@@ -63,6 +63,16 @@ export default function Home() {
                         <div className="mt-2 flex items-center gap-3 justify-center">
                             <button
                                 onClick={() => {
+                                    window.location.href = "/events";
+                                }}
+                                className="group inline-flex items-center gap-2 px-7 py-3.5 text-white border border-white/20 rounded-full font-medium hover:bg-white/10 transition-colors"
+                                aria-label="Explore our events"
+                            >
+                                <span>Explore Events</span>
+                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                            </button>
+                            <button
+                                onClick={() => {
                                     // Open registration link in new tab
                                     window.open(
                                         "https://forms.google.com/register",
@@ -75,21 +85,11 @@ export default function Home() {
                                 <span>Register Now</span>
                                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                             </button>
-                            <button
-                                onClick={() => {
-                                    window.location.href = "/events";
-                                }}
-                                className="group inline-flex items-center gap-2 px-7 py-3.5 text-white border border-white/20 rounded-full font-medium hover:bg-white/10 transition-colors"
-                                aria-label="Explore our events"
-                            >
-                                <span>Explore Events</span>
-                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                            </button>
                         </div>
                     </div>
 
                     {/* Brand Logos */}
-                    <div className="mt-20 max-w-7xl mx-auto">
+                    <div className="mt-10 max-w-7xl mx-auto">
                         <p className="text-sm text-center text-white/40 mb-8 font-medium">
                             Trusted by leading blockchain projects
                         </p>
