@@ -29,10 +29,7 @@ export default function CTASection() {
                         <div className="mb-8 flex items-center justify-center gap-3">
                             <button
                                 onClick={() => {
-                                    window.open(
-                                        "https://forms.google.com/register",
-                                        "_blank"
-                                    );
+                                    window.location.href = "/events/buildathon";
                                 }}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-white text-black font-semibold shadow-lg hover:shadow-xl transition-all"
                                 aria-label="Register for Build-A-Thon 2025"

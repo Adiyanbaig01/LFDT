@@ -22,7 +22,7 @@ export default function Navbar() {
         { name: "Home", href: "/" },
         { name: "About", href: "/about" },
         { name: "Events", href: "/events" },
-        { name: "Achievements", href: "/achievements" },
+        // { name: "Achievements", href: "/achievements" },
         { name: "Team", href: "/team" },
         { name: "Contact", href: "/contact" },
     ];
@@ -67,8 +67,8 @@ export default function Navbar() {
 
                     {/* Right area: Right logo and hamburger (right-aligned on small/medium) */}
                     <div className="flex justify-end items-center gap-3 md:gap-4">
-                        {/* Right Logo (visible on all sizes; scales responsively) */}
-                        <div className="flex flex-shrink-0 justify-end">
+                        {/* Right Logo (hidden on mobile, visible on md+) */}
+                        <div className="hidden md:flex flex-shrink-0 justify-end">
                             <Link href="/" className="flex items-center">
                                 <Image
                                     src="/india.png"

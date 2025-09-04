@@ -3,7 +3,7 @@ import Orb from "@/components/Orb";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import AboutSection from "@/components/sections/AboutSection";
 import EventsSection from "@/components/sections/EventsSection";
-import CtaFooterMerged from "@/components/sections/CTASection";
+import CTASection from "@/components/sections/CTASection";
 import {
     Github,
     Layers,
@@ -17,7 +17,7 @@ export default function Home() {
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white home-merged">
             {/* Hero Section */}
-            <section className="relative px-6 py-20 sm:py-32 min-h-screen max-h-screen overflow-hidden flex items-center">
+            <section className="relative px-6 py-20 sm:py-32 min-h-screen  overflow-hidden flex items-center">
                 {/* Interactive 3D cubes and ripple background (behind everything) */}
                 <InteractiveBackground />
                 {/* Large Orb encompassing hero content */}
@@ -139,7 +139,7 @@ export default function Home() {
             <EventsSection />
 
             {/* Merged CTA + Footer (shared background) */}
-            <CtaFooterMerged />
+            <CTASection />
 
             {/* Footer moved to RootLayout */}
         </main>
