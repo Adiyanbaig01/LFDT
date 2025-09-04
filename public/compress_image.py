@@ -47,7 +47,7 @@ def compress_image(input_path, output_path, target_height=200):
 
 if __name__ == "__main__":
     # Define input and output paths
-    input_file = "ind.png"
+    input_file = "india.png"
     output_file = "ind_compressed.png"
     
     # Check if input file exists
