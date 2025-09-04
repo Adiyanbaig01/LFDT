@@ -36,7 +36,7 @@ export default function Navbar() {
                         : "bg-transparent"
                 }`}
             >
-                <div className="max-w-7xl mx-auto flex justify-between items-center h-16 px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-3 items-center h-16 px-6 lg:px-8">
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link href="/" className="flex items-center">
@@ -50,8 +50,8 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:block">
+                    {/* Desktop Navigation (center) */}
+                    <div className="hidden lg:block justify-self-center">
                         <div className="flex items-center space-x-1">
                             {navigation.map((item) => (
                                 <Link
@@ -65,25 +65,41 @@ export default function Navbar() {
                         </div>
                     </div>
 
-                    {/* Mobile menu button */}
-                    <div className="md:hidden">
-                        <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                        >
-                            {isOpen ? (
-                                <X className="block h-6 w-6" />
-                            ) : (
-                                <Menu className="block h-6 w-6" />
-                            )}
-                        </button>
+                    {/* Right area: Right logo and hamburger (right-aligned on small/medium) */}
+                    <div className="flex justify-end items-center gap-3 md:gap-4">
+                        {/* Right Logo (visible on all sizes; scales responsively) */}
+                        <div className="flex flex-shrink-0 justify-end">
+                            <Link href="/" className="flex items-center">
+                                <Image
+                                    src="/ind.png"
+                                    alt="Right Logo"
+                                    width={200}
+                                    height={200}
+                                    className="object-contain w-48 h-auto"
+                                />
+                            </Link>
+                        </div>
+
+                        {/* Menu button (visible on small/medium; hidden on large+) */}
+                        <div className="lg:hidden justify-self-end">
+                            <button
+                                onClick={() => setIsOpen(!isOpen)}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                            >
+                                {isOpen ? (
+                                    <X className="block h-6 w-6" />
+                                ) : (
+                                    <Menu className="block h-6 w-6" />
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Mobile menu */}
             {isOpen && (
-                <div className="md:hidden">
+                <div className="lg:hidden">
                     <div
                         className={`p-4 space-y-2 transition-all duration-300 ease-out ${
                             isScrolled

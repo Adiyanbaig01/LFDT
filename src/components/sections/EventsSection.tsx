@@ -44,25 +44,27 @@ export default function EventsSection() {
                             Build-A-Thon 2025
                         </h3>
                         <p className="text-[#a0aec0] leading-relaxed mb-6">
-                            A 36-hour decentralized AI hackathon with hands-on
-                            workshops and expert mentors.
+                            Where Agents Shape Tomorrow - A comprehensive
+                            3-phase event featuring workshops, 36-hour
+                            hackathon, and expert presentations on Decentralized
+                            AI.
                         </p>
 
                         {/* Event details */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                             <div className="flex items-center gap-2 text-[#a0aec0]">
                                 <Clock className="w-4 h-4 text-[#3182ce]" />
-                                <span className="text-sm">36 Hours</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-[#a0aec0]">
-                                <Users className="w-4 h-4 text-[#3182ce]" />
                                 <span className="text-sm">
-                                    200+ Participants
+                                    Sept 12-15, 2025
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 text-[#a0aec0]">
+                                <Users className="w-4 h-4 text-[#3182ce]" />
+                                <span className="text-sm">Teams of 1-4</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[#a0aec0]">
                                 <MapPin className="w-4 h-4 text-[#3182ce]" />
-                                <span className="text-sm">PCCoE Campus</span>
+                                <span className="text-sm">PCCOE, Pune</span>
                             </div>
                         </div>
 
@@ -77,28 +79,53 @@ export default function EventsSection() {
                             </div>
                             <div className="px-4 py-2 bg-white/5 rounded-lg text-sm text-[#a0aec0] border border-white/10 inline-flex items-center gap-2">
                                 <CircleDollarSign className="w-4 h-4" />
-                                <span>Prize Pool</span>
+                                <span>Prizes & Certificates</span>
+                            </div>
+                        </div>
+
+                        {/* Event phases */}
+                        <div className="bg-white/5 rounded-lg p-4 mb-6 border border-white/10">
+                            <h4 className="text-white font-semibold mb-3">
+                                Event Phases:
+                            </h4>
+                            <div className="space-y-3 text-sm text-[#a0aec0]">
+                                <div>
+                                    <span className="text-[#3182ce] font-semibold">
+                                        Phase 1 (Sept 12):
+                                    </span>{" "}
+                                    8-hour workshop on Decentralized AI tools &
+                                    frameworks
+                                </div>
+                                <div>
+                                    <span className="text-[#3182ce] font-semibold">
+                                        Phase 2 (Sept 13-14):
+                                    </span>{" "}
+                                    36-hour hackathon for prototype development
+                                </div>
+                                <div>
+                                    <span className="text-[#3182ce] font-semibold">
+                                        Phase 3 (Sept 15):
+                                    </span>{" "}
+                                    Team presentations to expert panel
+                                </div>
                             </div>
                         </div>
 
                         {/* Additional highlights */}
                         <div className="bg-white/5 rounded-lg p-4 mb-6 border border-white/10">
                             <h4 className="text-white font-semibold mb-2">
-                                What to Expect:
+                                What You&apos;ll Get:
                             </h4>
                             <ul className="text-sm text-[#a0aec0] space-y-1">
+                                <li>• Certificates for all participants</li>
+                                <li>• Trophies and prizes for winning teams</li>
                                 <li>
-                                    • Hands-on workshops on blockchain & AI
-                                    fundamentals
-                                </li>
-                                <li>• Mentorship from industry experts</li>
-                                <li>
-                                    • Networking opportunities with like-minded
-                                    innovators
+                                    • Networking with LF Decentralized Trust &
+                                    IEEE Blockchain Pune experts
                                 </li>
                                 <li>
-                                    • Showcase your project to potential
-                                    investors
+                                    • Hands-on experience with cutting-edge AI
+                                    tools
                                 </li>
                             </ul>
                         </div>
@@ -106,14 +133,11 @@ export default function EventsSection() {
                         <div className="flex items-center gap-3 justify-end">
                             <button
                                 onClick={() => {
-                                    window.open(
-                                        "https://forms.google.com/register",
-                                        "_blank"
-                                    );
+                                    window.location.href = "/events/buildathon";
                                 }}
                                 className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-white text-black font-semibold shadow-lg hover:shadow-xl transition-all"
                             >
-                                <span>Register Now</span>
+                                <span>Register Now!</span>
                             </button>
                         </div>
                     </SpotlightCard>

@@ -3,7 +3,7 @@ import Orb from "@/components/Orb";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import AboutSection from "@/components/sections/AboutSection";
 import EventsSection from "@/components/sections/EventsSection";
-import CtaFooterMerged from "@/components/sections/CtaFooterMerged";
+import CtaFooterMerged from "@/components/sections/CTASection";
 import {
     Github,
     Layers,
@@ -17,7 +17,7 @@ export default function Home() {
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white home-merged">
             {/* Hero Section */}
-            <section className="relative px-6 py-20 sm:py-32 min-h-screen overflow-hidden flex items-center">
+            <section className="relative px-6 py-20 sm:py-32 min-h-screen max-h-screen overflow-hidden flex items-center">
                 {/* Interactive 3D cubes and ripple background (behind everything) */}
                 <InteractiveBackground />
                 {/* Large Orb encompassing hero content */}
@@ -86,11 +86,7 @@ export default function Home() {
                             </button>
                             <button
                                 onClick={() => {
-                                    // Open registration link in new tab
-                                    window.open(
-                                        "https://forms.google.com/register",
-                                        "_blank"
-                                    );
+                                    window.location.href = "/events/buildathon";
                                 }}
                                 className="group inline-flex items-center gap-3 px-7 py-3.5 bg-white text-black rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                                 aria-label="Register for Build-A-Thon 2025"
