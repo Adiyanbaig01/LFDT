@@ -31,14 +31,14 @@ export default function HeroSection({
                     liquid
                     liquidStrength={0.1}
                     liquidRadius={1.2}
-                    liquidWobbleSpeed={5}
-                    speed={0.6}
+                    liquidWobbleSpeed={7}
+                    speed={1.5}
                     edgeFade={0.25}
                     transparent
                 />
             </div>
-            <div className="absolute inset-0 flex items-center">
-                <div className="mx-auto max-w-6xl text-center">
+            <div className="absolute inset-0 flex items-center pointer-events-none">
+                <div className="mx-auto max-w-6xl text-center pointer-events-auto">
                     <h1 className="text-5xl sm:text-7xl font-bold leading-tight font-heading">
                         {title}
                     </h1>

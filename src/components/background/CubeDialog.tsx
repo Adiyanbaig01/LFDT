@@ -80,10 +80,7 @@ export default function CubeDialog({
                                 <div className="text-base text-white/80 leading-relaxed overflow-hidden">
                                     <DecryptedText
                                         text={body}
-                                        speed={Math.max(
-                                            20,
-                                            Math.min(100, 1200 / body.length)
-                                        )}
+                                        speed={1}
                                         sequential={true}
                                         revealDirection="start"
                                         useOriginalCharsOnly={true}
