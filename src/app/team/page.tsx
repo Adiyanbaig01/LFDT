@@ -97,15 +97,13 @@ export default function Team() {
                                     className="p-8"
                                 >
                                     <div className="flex flex-col items-center text-center">
-                                        <div className="w-32 h-32 rounded-full mb-6 overflow-hidden bg-[#3182ce] flex items-center justify-center">
-                                            <Image
-                                                src={faculty.image}
-                                                alt={faculty.name}
-                                                width={128}
-                                                height={128}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
+                                        <Image
+                                            src={faculty.image}
+                                            alt={faculty.name}
+                                            width={200}
+                                            height={200}
+                                            className="w-50 h-50 rounded-2xl mb-6"
+                                        />
                                         <h3 className="text-2xl font-bold mb-2 text-white font-heading">
                                             {faculty.name}
                                         </h3>
@@ -162,15 +160,13 @@ export default function Team() {
                                     className="p-8"
                                 >
                                     <div className="flex flex-col items-center text-center">
-                                        <div className="w-40 h-40 rounded-full mb-6 overflow-hidden bg-[#3182ce] flex items-center justify-center">
-                                            <Image
-                                                src={leader.image}
-                                                alt={leader.name}
-                                                width={160}
-                                                height={160}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
+                                        <Image
+                                            src={leader.image}
+                                            alt={leader.name}
+                                            width={200}
+                                            height={200}
+                                            className="w-50 h-50 rounded-2xl mb-6"
+                                        />
                                         <h3 className="text-2xl font-bold mb-2 text-white font-heading">
                                             {leader.name}
                                         </h3>

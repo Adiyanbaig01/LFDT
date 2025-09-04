@@ -62,14 +62,13 @@ export default function Home() {
                             <span className="text-white">DT </span>
                             Club Hackathon!
                         </h2>
-                        <p className="text-base sm:text-lg text-[#a0aec0] leading-relaxed mb-8 max-w-2xl mx-auto">
-                            An unforgettable journey into Decentralized AI,
-                            innovation, and community collaboration. Kickstart
-                            your blockchain & AI journey with a hands-on
-                            workshop, dive into a 36-hour hackathon, and
-                            showcase your talent in front of industry experts.
-                            Whether you&apos;re a beginner or a pro, this is
-                            your chance to build, learn, and leave your mark.
+                        <p className="text-base sm:text-lg text-[#a0aec0] leading-relaxed mb-8 max-w-xl mx-auto">
+                            Kickstart your blockchain & AI journey with a
+                            hands-on workshop, dive into a 36-hour hackathon,
+                            and showcase your talent in front of industry
+                            experts. Whether you&apos;re a beginner or a pro,
+                            this is your chance to build, learn, and leave your
+                            mark.
                         </p>
 
                         {/* CTA Buttons */}

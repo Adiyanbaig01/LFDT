@@ -5,7 +5,49 @@ import { Vector3, Color, BoxGeometry } from "three";
 import * as THREE from "three";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cubeAnchors } from "@/data/cubeAnchors";
+import { Edges, useCursor } from "@react-three/drei";
 import CubeDialog from "./CubeDialog";
+
+// Centralized configuration for all tunables
+const CUBE_CONFIG = {
+    // Sizes
+    cubeSize: 0.575, // 15% bigger cubes
+    particleSize: 8,
+    
+    // Animation speeds
+    formationSpeed: 8,
+    rotationSpeed: 0.5, // Rotation speed when formed
+    particleNoiseSpeed: { x: 0.8, y: 1.1, z: 0.9 },
+    
+    // Distances and thresholds  
+    hoverRadius: 120, // Hover detection radius in pixels
+    particleAmplitude: { min: 0.27, max: 0.36 }, // 90% of original (0.3-0.4 * 0.9)
+    
+    // Delays
+    cubeVisibilityDelay: 300, // ms after formation starts
+    dialogDelay: 300, // ms after cube is fully formed
+    
+    // Visual properties
+    colors: {
+        base: { r: 0.192, g: 0.51, b: 0.808 }, // #3182ce
+        formed: { r: 0.259, g: 0.6, b: 0.886 }, // #4299e2
+        emissive: "#3182ce",
+        edge: "#4299e2",
+    },
+    opacity: {
+        particle: 0.9,
+        cubeFace: 0.25,
+        cubeEdge: 0.9,
+        emissiveIntensity: 0.4,
+    },
+    intensity: {
+        base: 0.4,
+        formed: 1.2,
+    },
+    
+    // Formation threshold
+    formationThreshold: 0.7, // Progress at which cube is considered "formed"
+};
 
 type HoverState = {
     id: string | null;
@@ -13,27 +55,26 @@ type HoverState = {
     isFormed: boolean;
 };
 
-type ClickState = {
+type DialogState = {
     id: string | null;
     screenPos: { x: number; y: number } | null;
 };
 
 type ParticleState = {
     basePosition: Vector3;
-    currentPosition: Vector3;
-    velocity: Vector3;
     phase: number;
     amplitude: number;
 };
 
-type CubeState = {
-    particles: ParticleState[];
+// Mutable state for per-frame updates (not React state)
+type CubeRuntimeState = {
     isHovered: boolean;
-    isFormed: boolean;
     formationProgress: number;
     cubeVisibilityDelay: number;
-    clickSpring: number;
-    clickVelocity: number;
+    rotation: number;
+    dialogTimer: number;
+    hasTriggeredDialog: boolean;
+    particleFadeOut: number; // 0 to 1, controls particle opacity during fadeout
 };
 
 function useProjectToScreen() {
@@ -64,50 +105,61 @@ function useIsMobile() {
     return isMobile;
 }
 
+// Pre-create reusable objects to avoid allocations in render loop
+const tempVec3 = new Vector3();
+const floatingPos = new Vector3();
+const springOffset = new Vector3();
+
 function ParticleCube({
     anchor,
     onHoverChange,
-    onCubeClick,
+    onDialogTrigger,
 }: {
-    index: number;
     anchor: (typeof cubeAnchors)[0];
     onHoverChange: (h: HoverState) => void;
-    onCubeClick: (clickState: ClickState) => void;
+    onDialogTrigger: (d: DialogState) => void;
 }) {
     const particlesRef = useRef<THREE.Points>(null);
+    const meshRef = useRef<THREE.Mesh>(null);
     const project = useProjectToScreen();
 
-    const [cubeState, setCubeState] = useState<CubeState>(() => {
-        const cubeSize = 0.575; // 15% bigger cubes (0.5 * 1.15)
+    // Static particle data (doesn't change)
+    const particles = useMemo<ParticleState[]>(() => {
         const basePos = new Vector3(...anchor.pos);
+        const halfSize = CUBE_CONFIG.cubeSize / 2;
 
         // 8 corners of a cube
         const corners = [
-            new Vector3(-cubeSize / 2, -cubeSize / 2, -cubeSize / 2),
-            new Vector3(cubeSize / 2, -cubeSize / 2, -cubeSize / 2),
-            new Vector3(-cubeSize / 2, cubeSize / 2, -cubeSize / 2),
-            new Vector3(cubeSize / 2, cubeSize / 2, -cubeSize / 2),
-            new Vector3(-cubeSize / 2, -cubeSize / 2, cubeSize / 2),
-            new Vector3(cubeSize / 2, -cubeSize / 2, cubeSize / 2),
-            new Vector3(-cubeSize / 2, cubeSize / 2, cubeSize / 2),
-            new Vector3(cubeSize / 2, cubeSize / 2, cubeSize / 2),
+            new Vector3(-halfSize, -halfSize, -halfSize),
+            new Vector3(halfSize, -halfSize, -halfSize),
+            new Vector3(-halfSize, halfSize, -halfSize),
+            new Vector3(halfSize, halfSize, -halfSize),
+            new Vector3(-halfSize, -halfSize, halfSize),
+            new Vector3(halfSize, -halfSize, halfSize),
+            new Vector3(-halfSize, halfSize, halfSize),
+            new Vector3(halfSize, halfSize, halfSize),
         ];
 
-        return {
-            particles: corners.map((corner) => ({
-                basePosition: basePos.clone().add(corner),
-                currentPosition: basePos.clone().add(corner),
-                velocity: new Vector3(0, 0, 0),
-                phase: Math.random() * Math.PI * 2,
-                amplitude: (0.3 + Math.random() * 0.4) * 0.9, // Particles stray 90% of original
-            })),
-            isHovered: false,
-            isFormed: false,
-            formationProgress: 0,
-            cubeVisibilityDelay: 0,
-            clickSpring: 0,
-            clickVelocity: 0,
-        };
+        return corners.map((corner) => ({
+            basePosition: basePos.clone().add(corner),
+            phase: Math.random() * Math.PI * 2,
+            amplitude:
+                CUBE_CONFIG.particleAmplitude.min +
+                Math.random() *
+                    (CUBE_CONFIG.particleAmplitude.max -
+                        CUBE_CONFIG.particleAmplitude.min),
+        }));
+    }, [anchor.pos]);
+
+    // Mutable runtime state (not React state to avoid re-renders)
+    const runtimeState = useRef<CubeRuntimeState>({
+        isHovered: false,
+        formationProgress: 0,
+        cubeVisibilityDelay: 0,
+        rotation: 0,
+        dialogTimer: 0,
+        hasTriggeredDialog: false,
+        particleFadeOut: 1, // Start fully visible
     });
 
     const pointer = useRef<{ x: number; y: number; active: boolean }>({
@@ -116,9 +168,12 @@ function ParticleCube({
         active: false,
     });
 
+    // Track hover state for cursor
+    const [isHoverable, setIsHoverable] = useState(false);
+    useCursor(isHoverable);
+
     useEffect(() => {
         const onMove = (e: PointerEvent) => {
-            // Account for zoom level in pointer coordinates
             const zoom = window.visualViewport?.scale || 1;
             pointer.current.x = e.clientX / zoom;
             pointer.current.y = e.clientY / zoom;
@@ -140,172 +195,203 @@ function ParticleCube({
 
         const t = clock.getElapsedTime();
         const positions =
-            particlesRef.current.geometry.attributes.position.array;
-        const colors = particlesRef.current.geometry.attributes.color.array;
+            particlesRef.current.geometry.attributes.position.array as Float32Array;
+        const colors = particlesRef.current.geometry.attributes.color
+            .array as Float32Array;
+        const state = runtimeState.current;
 
-        setCubeState((prev) => {
-            const newState = { ...prev };
-            let isInHoverArea = false;
+        // Check if mouse is in hover area (larger invisible area around cube)
+        let isInHoverArea = false;
+        if (pointer.current.active) {
+            tempVec3.set(...anchor.pos);
+            const centerScreen = project(tempVec3);
+            const dx = centerScreen.x - pointer.current.x;
+            const dy = centerScreen.y - pointer.current.y;
+            const d = Math.hypot(dx, dy);
 
-            // Check if mouse is in the general cube area
-            if (pointer.current.active) {
-                const centerWorld = new Vector3(...anchor.pos);
-                const centerScreen = project(centerWorld);
-                const dx = centerScreen.x - pointer.current.x;
-                const dy = centerScreen.y - pointer.current.y;
-                const d = Math.hypot(dx, dy);
-                const threshold = 120;
-
-                if (d < threshold) {
-                    isInHoverArea = true;
-                }
+            if (d < CUBE_CONFIG.hoverRadius) {
+                isInHoverArea = true;
             }
+        }
 
-            // Update hover state and formation progress
-            if (isInHoverArea && !newState.isHovered) {
-                newState.isHovered = true;
-            } else if (!isInHoverArea && newState.isHovered) {
-                newState.isHovered = false;
-            }
-
-            // Smooth formation progress
-            const targetProgress = newState.isHovered ? 1 : 0;
-            newState.formationProgress +=
-                (targetProgress - newState.formationProgress) * delta * 8;
-            newState.isFormed = newState.formationProgress > 0.7;
-
-            // Update cube visibility delay (300ms after formation starts)
-            if (
-                newState.formationProgress > 0.7 &&
-                newState.cubeVisibilityDelay < 1
-            ) {
-                newState.cubeVisibilityDelay += delta * (1000 / 300); // 300ms delay
-            } else if (newState.formationProgress <= 0.7) {
-                newState.cubeVisibilityDelay = 0;
-            }
-
-            // Update click spring
-            const springForce = -newState.clickSpring * 15;
-            const damping = -newState.clickVelocity * 8;
-            newState.clickVelocity += (springForce + damping) * delta;
-            newState.clickSpring += newState.clickVelocity * delta;
-
-            // Update particles
-            newState.particles.forEach((particle, i) => {
-                const baseIdx = i * 3;
-
-                // Calculate base floating position with noise
-                const noiseX =
-                    Math.sin(t * 0.8 + particle.phase) * particle.amplitude;
-                const noiseY =
-                    Math.sin(t * 1.1 + particle.phase * 1.3) *
-                    particle.amplitude;
-                const noiseZ =
-                    Math.sin(t * 0.9 + particle.phase * 0.7) *
-                    particle.amplitude;
-
-                const floatingPos = particle.basePosition.clone();
-                floatingPos.x += noiseX;
-                floatingPos.y += noiseY;
-                floatingPos.z += noiseZ;
-
-                // Interpolate between floating position and exact cube corner
-                const exactCubePos = particle.basePosition.clone();
-                particle.currentPosition.copy(floatingPos);
-                particle.currentPosition.lerp(
-                    exactCubePos,
-                    newState.formationProgress
-                );
-
-                // Apply click spring effect
-                if (newState.clickSpring !== 0) {
-                    const springOffset = new Vector3(...anchor.pos)
-                        .sub(particle.currentPosition)
-                        .normalize()
-                        .multiplyScalar(newState.clickSpring * 0.3);
-                    particle.currentPosition.add(springOffset);
-                }
-
-                positions[baseIdx] = particle.currentPosition.x;
-                positions[baseIdx + 1] = particle.currentPosition.y;
-                positions[baseIdx + 2] = particle.currentPosition.z;
-
-                // Particle color based on formation progress - vibrant theme colors
-                const baseIntensity = 0.4;
-                const formedIntensity = 1.2;
-                const intensity =
-                    baseIntensity +
-                    newState.formationProgress *
-                        (formedIntensity - baseIntensity);
-
-                // Use website theme colors (#3182ce to #4299e2)
-                // Base color: #3182ce (49, 130, 206) -> RGB(0.192, 0.51, 0.808)
-                // Formed color: #4299e2 (66, 153, 226) -> RGB(0.259, 0.6, 0.886)
-                const baseR = 0.192,
-                    baseG = 0.51,
-                    baseB = 0.808;
-                const formedR = 0.259,
-                    formedG = 0.6,
-                    formedB = 0.886;
-
-                const r =
-                    baseR + newState.formationProgress * (formedR - baseR);
-                const g =
-                    baseG + newState.formationProgress * (formedG - baseG);
-                const b =
-                    baseB + newState.formationProgress * (formedB - baseB);
-
-                colors[baseIdx] = r * intensity; // R
-                colors[baseIdx + 1] = g * intensity; // G
-                colors[baseIdx + 2] = b * intensity; // B
-            });
-
-            // Trigger hover callback
-            if (newState.isFormed && isInHoverArea) {
-                const centerScreen = project(new Vector3(...anchor.pos));
-                onHoverChange({
-                    id: anchor.id,
-                    screenPos: centerScreen,
-                    isFormed: true,
-                });
-            } else {
-                onHoverChange({
+        // Update hover state
+        if (isInHoverArea !== state.isHovered) {
+            state.isHovered = isInHoverArea;
+            if (!isInHoverArea) {
+                // Reset dialog trigger and particle fade when unhovered
+                state.hasTriggeredDialog = false;
+                state.dialogTimer = 0;
+                state.particleFadeOut = 1;
+                // Close dialog immediately when unhovered
+                onDialogTrigger({
                     id: null,
                     screenPos: null,
-                    isFormed: false,
                 });
             }
+        }
 
-            return newState;
+        // Smooth formation progress
+        const targetProgress = state.isHovered ? 1 : 0;
+        state.formationProgress +=
+            (targetProgress - state.formationProgress) *
+            delta *
+            CUBE_CONFIG.formationSpeed;
+
+        const isFormed = state.formationProgress > CUBE_CONFIG.formationThreshold;
+
+        // Update cube visibility delay
+        if (isFormed && state.cubeVisibilityDelay < 1) {
+            state.cubeVisibilityDelay +=
+                delta * (1000 / CUBE_CONFIG.cubeVisibilityDelay);
+        } else if (!isFormed) {
+            state.cubeVisibilityDelay = 0;
+        }
+
+        // Rotate cube when formed
+        if (isFormed) {
+            state.rotation += delta * CUBE_CONFIG.rotationSpeed;
+            if (meshRef.current) {
+                meshRef.current.rotation.y = state.rotation;
+                meshRef.current.rotation.x = state.rotation * 0.5;
+            }
+        }
+
+        // Handle dialog timer (auto-show after cube forms)
+        if (isFormed && state.isHovered && !state.hasTriggeredDialog) {
+            state.dialogTimer += delta * 1000; // Convert to ms
+            
+            // Start fading out particles as dialog timer progresses
+            state.particleFadeOut = 1 - (state.dialogTimer / CUBE_CONFIG.dialogDelay);
+            state.particleFadeOut = Math.max(0, state.particleFadeOut);
+            
+            if (state.dialogTimer >= CUBE_CONFIG.dialogDelay) {
+                state.hasTriggeredDialog = true;
+                tempVec3.set(...anchor.pos);
+                const centerScreen = project(tempVec3);
+                
+                // Determine if cube is on left or right side based on world position
+                const isOnRightSide = anchor.pos[0] > 0; // x > 0 means right side
+                const offsetX = isOnRightSide ? -200 : 200; // Dialog on opposite side
+                const offsetY = -30; // Slight upward offset
+                
+                onDialogTrigger({
+                    id: anchor.id,
+                    screenPos: {
+                        x: centerScreen.x + offsetX,
+                        y: centerScreen.y + offsetY,
+                    },
+                });
+            }
+        } else if (!isFormed || !state.isHovered) {
+            // Reset particle fade when not hovering or not formed
+            state.particleFadeOut = 1;
+        }
+
+        // Update particles
+        particles.forEach((particle, i) => {
+            const baseIdx = i * 3;
+
+            // Calculate base floating position with noise
+            const noiseX =
+                Math.sin(t * CUBE_CONFIG.particleNoiseSpeed.x + particle.phase) *
+                particle.amplitude;
+            const noiseY =
+                Math.sin(
+                    t * CUBE_CONFIG.particleNoiseSpeed.y + particle.phase * 1.3
+                ) * particle.amplitude;
+            const noiseZ =
+                Math.sin(
+                    t * CUBE_CONFIG.particleNoiseSpeed.z + particle.phase * 0.7
+                ) * particle.amplitude;
+
+            // Reuse floatingPos vector
+            floatingPos.copy(particle.basePosition);
+            floatingPos.x += noiseX;
+            floatingPos.y += noiseY;
+            floatingPos.z += noiseZ;
+
+            // Interpolate between floating and formed positions
+            const lerpFactor = state.formationProgress;
+            positions[baseIdx] =
+                floatingPos.x * (1 - lerpFactor) +
+                particle.basePosition.x * lerpFactor;
+            positions[baseIdx + 1] =
+                floatingPos.y * (1 - lerpFactor) +
+                particle.basePosition.y * lerpFactor;
+            positions[baseIdx + 2] =
+                floatingPos.z * (1 - lerpFactor) +
+                particle.basePosition.z * lerpFactor;
+
+            // Update colors based on formation progress
+            const intensity =
+                CUBE_CONFIG.intensity.base +
+                state.formationProgress *
+                    (CUBE_CONFIG.intensity.formed - CUBE_CONFIG.intensity.base);
+
+            const { base, formed } = CUBE_CONFIG.colors;
+            colors[baseIdx] =
+                (base.r + state.formationProgress * (formed.r - base.r)) *
+                intensity;
+            colors[baseIdx + 1] =
+                (base.g + state.formationProgress * (formed.g - base.g)) *
+                intensity;
+            colors[baseIdx + 2] =
+                (base.b + state.formationProgress * (formed.b - base.b)) *
+                intensity;
         });
+
+        // Update cursor state
+        setIsHoverable(isFormed && isInHoverArea);
+
+        // Trigger hover callback for UI updates
+        if (isFormed && isInHoverArea) {
+            tempVec3.set(...anchor.pos);
+            const centerScreen = project(tempVec3);
+            onHoverChange({
+                id: anchor.id,
+                screenPos: centerScreen,
+                isFormed: true,
+            });
+        } else {
+            onHoverChange({
+                id: null,
+                screenPos: null,
+                isFormed: false,
+            });
+        }
 
         particlesRef.current.geometry.attributes.position.needsUpdate = true;
         particlesRef.current.geometry.attributes.color.needsUpdate = true;
     });
 
     const particlePositions = useMemo(() => {
-        const positions = new Float32Array(cubeState.particles.length * 3);
-        cubeState.particles.forEach((particle, i) => {
+        const positions = new Float32Array(particles.length * 3);
+        particles.forEach((particle, i) => {
             positions[i * 3] = particle.basePosition.x;
             positions[i * 3 + 1] = particle.basePosition.y;
             positions[i * 3 + 2] = particle.basePosition.z;
         });
         return positions;
-    }, [cubeState.particles]);
+    }, [particles]);
 
     const particleColors = useMemo(() => {
-        const colors = new Float32Array(cubeState.particles.length * 3);
-        // Use theme colors: #3182ce (49, 130, 206) -> RGB(0.192, 0.51, 0.808)
-        for (let i = 0; i < cubeState.particles.length; i++) {
-            colors[i * 3] = 0.192; // R - theme blue
-            colors[i * 3 + 1] = 0.51; // G - theme blue
-            colors[i * 3 + 2] = 0.808; // B - theme blue
+        const colors = new Float32Array(particles.length * 3);
+        const { base } = CUBE_CONFIG.colors;
+        for (let i = 0; i < particles.length; i++) {
+            colors[i * 3] = base.r;
+            colors[i * 3 + 1] = base.g;
+            colors[i * 3 + 2] = base.b;
         }
         return colors;
-    }, [cubeState.particles.length]);
+    }, [particles.length]);
 
-    const cubeSize = 0.575; // 15% bigger cubes
-    const cubeOpacity = Math.max(0, Math.min(1, cubeState.cubeVisibilityDelay)); // Fade in cube geometry after delay
+    // Memoize geometry to avoid recreations
+    const boxGeometry = useMemo(() => new BoxGeometry(1, 1, 1), []);
+
+    const cubeOpacity = Math.max(
+        0,
+        Math.min(1, runtimeState.current.cubeVisibilityDelay)
+    );
 
     return (
         <group>
@@ -322,72 +408,44 @@ function ParticleCube({
                     />
                 </bufferGeometry>
                 <pointsMaterial
-                    size={8} // Smaller particles
+                    size={CUBE_CONFIG.particleSize}
                     vertexColors
                     transparent
-                    opacity={0.9}
+                    opacity={CUBE_CONFIG.opacity.particle * runtimeState.current.particleFadeOut}
                     sizeAttenuation={false}
                 />
             </points>
 
-            {/* Cube faces and edges when formed */}
-            {cubeState.cubeVisibilityDelay > 0 && (
+            {/* Cube mesh with edges when formed */}
+            {runtimeState.current.cubeVisibilityDelay > 0 && (
                 <mesh
+                    ref={meshRef}
                     position={anchor.pos}
-                    scale={[cubeSize, cubeSize, cubeSize]}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (cubeState.isFormed) {
-                            // Trigger spring animation
-                            setCubeState((prev) => ({
-                                ...prev,
-                                clickSpring: 0.5,
-                                clickVelocity: 0,
-                            }));
-
-                            // Open dialog at cube position
-                            const centerScreen = project(
-                                new Vector3(...anchor.pos)
-                            );
-                            onCubeClick({
-                                id: anchor.id,
-                                screenPos: centerScreen,
-                            });
-                        }
-                    }}
-                    onPointerEnter={() => {
-                        document.body.style.cursor = cubeState.isFormed
-                            ? "pointer"
-                            : "default";
-                    }}
-                    onPointerLeave={() => {
-                        document.body.style.cursor = "default";
-                    }}
+                    scale={[
+                        CUBE_CONFIG.cubeSize,
+                        CUBE_CONFIG.cubeSize,
+                        CUBE_CONFIG.cubeSize,
+                    ]}
                 >
-                    <boxGeometry args={[1, 1, 1]} />
+                    <primitive object={boxGeometry} />
                     <meshStandardMaterial
-                        color="#4299e2"
+                        color={CUBE_CONFIG.colors.edge}
                         transparent
-                        opacity={cubeOpacity * 0.25} // Slightly more visible faces
-                        emissive={new Color("#3182ce")}
-                        emissiveIntensity={cubeOpacity * 0.4} // More vibrant glow
+                        opacity={cubeOpacity * CUBE_CONFIG.opacity.cubeFace}
+                        emissive={new Color(CUBE_CONFIG.colors.emissive)}
+                        emissiveIntensity={
+                            cubeOpacity * CUBE_CONFIG.opacity.emissiveIntensity
+                        }
+                    />
+                    <Edges
+                        color={CUBE_CONFIG.colors.edge}
+                        scale={1.001} // Slightly larger to prevent z-fighting
+                        renderOrder={1}
+                        linewidth={2}
+                        threshold={15} // Angle threshold for edge detection
+                        opacity={cubeOpacity * CUBE_CONFIG.opacity.cubeEdge}
                     />
                 </mesh>
-            )}
-
-            {/* Cube edges */}
-            {cubeState.cubeVisibilityDelay > 0 && (
-                <lineSegments
-                    position={anchor.pos}
-                    scale={[cubeSize, cubeSize, cubeSize]}
-                >
-                    <edgesGeometry args={[new BoxGeometry(1, 1, 1)]} />
-                    <lineBasicMaterial
-                        color="#4299e2"
-                        transparent
-                        opacity={cubeOpacity * 0.9} // More vibrant and opaque edges
-                    />
-                </lineSegments>
             )}
         </group>
     );
@@ -395,28 +453,19 @@ function ParticleCube({
 
 function ParticleCubes({
     onHoverChange,
-    onCubeClick,
+    onDialogTrigger,
 }: {
     onHoverChange: (h: HoverState) => void;
-    onCubeClick: (c: ClickState) => void;
+    onDialogTrigger: (d: DialogState) => void;
 }) {
-    const handleHoverChange = (newHover: HoverState) => {
-        onHoverChange(newHover);
-    };
-
-    const handleCubeClick = (clickState: ClickState) => {
-        onCubeClick(clickState);
-    };
-
     return (
         <>
-            {cubeAnchors.map((anchor, index) => (
+            {cubeAnchors.map((anchor) => (
                 <ParticleCube
                     key={anchor.id}
-                    index={index}
                     anchor={anchor}
-                    onHoverChange={handleHoverChange}
-                    onCubeClick={handleCubeClick}
+                    onHoverChange={onHoverChange}
+                    onDialogTrigger={onDialogTrigger}
                 />
             ))}
         </>
@@ -443,13 +492,13 @@ export default function FloatingCubesCanvas() {
         screenPos: null,
         isFormed: false,
     });
-    const [clickedCube, setClickedCube] = useState<ClickState>({
+    const [dialogState, setDialogState] = useState<DialogState>({
         id: null,
         screenPos: null,
     });
     const isMobile = useIsMobile();
-    const active = clickedCube.id
-        ? cubeAnchors.find((a) => a.id === clickedCube.id)
+    const active = dialogState.id
+        ? cubeAnchors.find((a) => a.id === dialogState.id)
         : null;
 
     // Don't render on mobile
@@ -468,20 +517,20 @@ export default function FloatingCubesCanvas() {
                     <Lights />
                     <ParticleCubes
                         onHoverChange={setHover}
-                        onCubeClick={setClickedCube}
+                        onDialogTrigger={setDialogState}
                     />
                 </Canvas>
             </div>
 
             <div className="pointer-events-auto">
                 <CubeDialog
-                    open={!!clickedCube.id && !!active}
+                    open={!!dialogState.id && !!active}
                     title={active?.title ?? ""}
                     body={active?.body ?? ""}
                     onClose={() =>
-                        setClickedCube({ id: null, screenPos: null })
+                        setDialogState({ id: null, screenPos: null })
                     }
-                    screenPos={clickedCube.screenPos}
+                    screenPos={dialogState.screenPos}
                 />
             </div>
         </div>
