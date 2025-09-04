@@ -507,8 +507,8 @@ export default function FloatingCubesCanvas() {
     }
 
     return (
-        <div className="absolute inset-0 z-[15]" aria-hidden>
-            <div className="absolute inset-0">
+        <div className="absolute inset-0 z-[10] pointer-events-none" aria-hidden>
+            <div className="absolute inset-0 pointer-events-none">
                 <Canvas
                     dpr={[1, 1.5]}
                     camera={{ fov: 55, position: [0, 0, 6] }}
@@ -522,17 +522,13 @@ export default function FloatingCubesCanvas() {
                 </Canvas>
             </div>
 
-            <div className="pointer-events-auto">
-                <CubeDialog
-                    open={!!dialogState.id && !!active}
-                    title={active?.title ?? ""}
-                    body={active?.body ?? ""}
-                    onClose={() =>
-                        setDialogState({ id: null, screenPos: null })
-                    }
-                    screenPos={dialogState.screenPos}
-                />
-            </div>
+            <CubeDialog
+                open={!!dialogState.id && !!active}
+                title={active?.title ?? ""}
+                body={active?.body ?? ""}
+                onClose={() => setDialogState({ id: null, screenPos: null })}
+                screenPos={dialogState.screenPos}
+            />
         </div>
     );
 }

@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import DecryptedText from "@/components/DecryptedText";
+import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 
 type Props = {
     open: boolean;
@@ -18,7 +20,11 @@ export default function CubeDialog({
     onClose,
     screenPos,
 }: Props) {
-    return (
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {open && screenPos && (
                 <>
@@ -62,7 +68,7 @@ export default function CubeDialog({
                                 )
                             ),
                         }}
-                        className="z-[46] -translate-x-1/2 -translate-y-1/2"
+                        className="z-[100] -translate-x-1/2 -translate-y-1/2"
                     >
                         <div className="relative border border-[#3182ce]/60 bg-[#0f1419]/95 p-8 w-[380px] shadow-2xl rounded-xl">
                             {title && (
@@ -90,6 +96,7 @@ export default function CubeDialog({
                     </motion.div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
