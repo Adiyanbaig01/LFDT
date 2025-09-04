@@ -71,7 +71,7 @@ export default function Navbar() {
                         <div className="flex flex-shrink-0 justify-end">
                             <Link href="/" className="flex items-center">
                                 <Image
-                                    src="/ind.png"
+                                    src="/india.png"
                                     alt="Right Logo"
                                     width={200}
                                     height={200}
