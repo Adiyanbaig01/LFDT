@@ -13,20 +13,20 @@ const CUBE_CONFIG = {
     // Sizes
     cubeSize: 0.575, // 15% bigger cubes
     particleSize: 8,
-    
+
     // Animation speeds
     formationSpeed: 8,
     rotationSpeed: 0.5, // Rotation speed when formed
     particleNoiseSpeed: { x: 0.8, y: 1.1, z: 0.9 },
-    
-    // Distances and thresholds  
+
+    // Distances and thresholds
     hoverRadius: 120, // Hover detection radius in pixels
     particleAmplitude: { min: 0.27, max: 0.36 }, // 90% of original (0.3-0.4 * 0.9)
-    
+
     // Delays
     cubeVisibilityDelay: 300, // ms after formation starts
     dialogDelay: 300, // ms after cube is fully formed
-    
+
     // Visual properties
     colors: {
         base: { r: 0.192, g: 0.51, b: 0.808 }, // #3182ce
@@ -44,7 +44,7 @@ const CUBE_CONFIG = {
         base: 0.4,
         formed: 1.2,
     },
-    
+
     // Formation threshold
     formationThreshold: 0.7, // Progress at which cube is considered "formed"
 };
@@ -175,8 +175,8 @@ function ParticleCube({
     useEffect(() => {
         const onMove = (e: PointerEvent) => {
             const zoom = window.visualViewport?.scale || 1;
-            pointer.current.x = e.clientX / zoom;
-            pointer.current.y = e.clientY / zoom;
+            pointer.current.x = e.pageX / zoom;
+            pointer.current.y = e.pageY / zoom;
             pointer.current.active = true;
         };
         const onLeave = () => {
@@ -194,8 +194,8 @@ function ParticleCube({
         if (!particlesRef.current) return;
 
         const t = clock.getElapsedTime();
-        const positions =
-            particlesRef.current.geometry.attributes.position.array as Float32Array;
+        const positions = particlesRef.current.geometry.attributes.position
+            .array as Float32Array;
         const colors = particlesRef.current.geometry.attributes.color
             .array as Float32Array;
         const state = runtimeState.current;
@@ -237,7 +237,8 @@ function ParticleCube({
             delta *
             CUBE_CONFIG.formationSpeed;
 
-        const isFormed = state.formationProgress > CUBE_CONFIG.formationThreshold;
+        const isFormed =
+            state.formationProgress > CUBE_CONFIG.formationThreshold;
 
         // Update cube visibility delay
         if (isFormed && state.cubeVisibilityDelay < 1) {
@@ -259,26 +260,27 @@ function ParticleCube({
         // Handle dialog timer (auto-show after cube forms)
         if (isFormed && state.isHovered && !state.hasTriggeredDialog) {
             state.dialogTimer += delta * 1000; // Convert to ms
-            
+
             // Start fading out particles as dialog timer progresses
-            state.particleFadeOut = 1 - (state.dialogTimer / CUBE_CONFIG.dialogDelay);
+            state.particleFadeOut =
+                1 - state.dialogTimer / CUBE_CONFIG.dialogDelay;
             state.particleFadeOut = Math.max(0, state.particleFadeOut);
-            
+
             if (state.dialogTimer >= CUBE_CONFIG.dialogDelay) {
                 state.hasTriggeredDialog = true;
                 tempVec3.set(...anchor.pos);
                 const centerScreen = project(tempVec3);
-                
+
                 // Determine if cube is on left or right side based on world position
                 const isOnRightSide = anchor.pos[0] > 0; // x > 0 means right side
                 const offsetX = isOnRightSide ? -200 : 200; // Dialog on opposite side
                 const offsetY = -30; // Slight upward offset
-                
+
                 onDialogTrigger({
                     id: anchor.id,
                     screenPos: {
                         x: centerScreen.x + offsetX,
-                        y: centerScreen.y + offsetY,
+                        y: centerScreen.y + offsetY - window.scrollY,
                     },
                 });
             }
@@ -293,8 +295,9 @@ function ParticleCube({
 
             // Calculate base floating position with noise
             const noiseX =
-                Math.sin(t * CUBE_CONFIG.particleNoiseSpeed.x + particle.phase) *
-                particle.amplitude;
+                Math.sin(
+                    t * CUBE_CONFIG.particleNoiseSpeed.x + particle.phase
+                ) * particle.amplitude;
             const noiseY =
                 Math.sin(
                     t * CUBE_CONFIG.particleNoiseSpeed.y + particle.phase * 1.3
@@ -411,7 +414,10 @@ function ParticleCube({
                     size={CUBE_CONFIG.particleSize}
                     vertexColors
                     transparent
-                    opacity={CUBE_CONFIG.opacity.particle * runtimeState.current.particleFadeOut}
+                    opacity={
+                        CUBE_CONFIG.opacity.particle *
+                        runtimeState.current.particleFadeOut
+                    }
                     sizeAttenuation={false}
                 />
             </points>
@@ -507,7 +513,10 @@ export default function FloatingCubesCanvas() {
     }
 
     return (
-        <div className="absolute inset-0 z-[10] pointer-events-none" aria-hidden>
+        <div
+            className="absolute inset-0 z-[10] pointer-events-none"
+            aria-hidden
+        >
             <div className="absolute inset-0 pointer-events-none">
                 <Canvas
                     dpr={[1, 1.5]}

@@ -1,6 +1,7 @@
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import SectionBackground from "@/components/ui/SectionBackground";
+import CTASection from "@/components/sections/CTASection";
 
 export default function About() {
     return (
@@ -35,22 +36,23 @@ export default function About() {
                                 <p className="text-lg text-[#a0aec0] leading-relaxed mb-6 font-body">
                                     The{" "}
                                     <strong>
-                                        Linux Foundation Decentralized Trust (LFDT)
+                                        Linux Foundation Decentralized Trust
+                                        (LFDT)
                                     </strong>{" "}
                                     is a collaborative ecosystem for open-source
-                                    projects in blockchain, distributed ledgers, and
-                                    decentralized systems.
+                                    projects in blockchain, distributed ledgers,
+                                    and decentralized systems.
                                 </p>
                                 <p className="text-lg text-[#a0aec0] leading-relaxed mb-6 font-body">
-                                    Its mission is to enable innovation, adoption,
-                                    and standardization in digital trust
-                                    technologies across industries such as finance,
-                                    supply chain, government services, and identity
-                                    management.
+                                    Its mission is to enable innovation,
+                                    adoption, and standardization in digital
+                                    trust technologies across industries such as
+                                    finance, supply chain, government services,
+                                    and identity management.
                                 </p>
                                 <p className="text-lg text-[#a0aec0] leading-relaxed font-body">
-                                    Through collaborative development, LFDT brings
-                                    together developers, enterprises, and
+                                    Through collaborative development, LFDT
+                                    brings together developers, enterprises, and
                                     institutions to build the foundation for
                                     tomorrow&apos;s decentralized world.
                                 </p>
@@ -107,9 +109,9 @@ export default function About() {
                                 </span>
                             </h2>
                             <p className="text-xl text-[#a0aec0] max-w-3xl mx-auto font-body">
-                                The PCCoE LFDT Club is a student-run initiative that
-                                acts as a local hub for learning and contributing to
-                                this global mission.
+                                The PCCoE LFDT Club is a student-run initiative
+                                that acts as a local hub for learning and
+                                contributing to this global mission.
                             </p>
                         </div>
 
@@ -120,8 +122,8 @@ export default function About() {
                                     Structured Pathways
                                 </h3>
                                 <p className="text-[#a0aec0] font-body">
-                                    Provide structured pathways for students to get
-                                    started with open-source contributions
+                                    Provide structured pathways for students to
+                                    get started with open-source contributions
                                 </p>
                             </SpotlightCard>
 
@@ -152,38 +154,40 @@ export default function About() {
             </div>
 
             {/* CTA Section */}
-            <section className="relative px-6 py-16 sm:py-20 bg-[#0a0e13] overflow-hidden">
-                <SectionBackground />
-                <div className="relative mx-auto max-w-4xl text-center">
-                    <SpotlightCard className="p-12">
-                        <h2 className="text-4xl sm:text-5xl font-bold mb-8 font-heading">
-                            Join Our{" "}
-                            <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
-                                Mission
-                            </span>
-                        </h2>
-                        <p className="text-xl text-[#a0aec0] mb-10 max-w-2xl mx-auto font-body">
-                            Be part of a community that&apos;s shaping the future of
-                            decentralized trust technologies. Connect, learn, and
-                            contribute to meaningful open-source projects.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a
-                                href="/contact"
-                                className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-lg font-medium text-black hover:bg-gray-200 transition-all duration-200 shadow-lg hover:shadow-xl font-body"
-                            >
-                                Get Involved
-                            </a>
-                            <a
-                                href="/events"
-                                className="inline-flex items-center justify-center rounded-lg border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/10 transition-all duration-200 font-body"
-                            >
-                                View Events
-                            </a>
-                        </div>
-                    </SpotlightCard>
-                </div>
-            </section>
+            <CTASection
+                wrapperClassName="relative px-6 py-16 sm:py-20 bg-[#0a0e13] overflow-hidden"
+                showSectionBackground={true}
+                containerClassName="relative mx-auto max-w-4xl text-center"
+                spotlightCardClassName="p-12"
+                title={
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-8 font-heading">
+                        Join Our{" "}
+                        <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
+                            Mission
+                        </span>
+                    </h2>
+                }
+                description={
+                    <p className="text-xl text-[#a0aec0] mb-10 max-w-2xl mx-auto font-body">
+                        Be part of a community that&apos;s shaping the future of
+                        decentralized trust technologies. Connect, learn, and
+                        contribute to meaningful open-source projects.
+                    </p>
+                }
+                primary={{
+                    label: "Get Involved",
+                    href: "/contact",
+                    className:
+                        "inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-lg font-medium text-black hover:bg-gray-200 transition-all duration-200 shadow-lg hover:shadow-xl font-body",
+                }}
+                secondary={{
+                    label: "View Events",
+                    href: "/events",
+                    className:
+                        "inline-flex items-center justify-center rounded-lg border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/10 transition-all duration-200 font-body",
+                }}
+                buttonsWrapperClassName="flex flex-col sm:flex-row gap-4 justify-center"
+            />
         </main>
     );
 }

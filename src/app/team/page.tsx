@@ -2,6 +2,7 @@ import { Mail, Linkedin, Github } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import SectionBackground from "@/components/ui/SectionBackground";
+import CTASection from "@/components/sections/CTASection";
 import Image from "next/image";
 
 export default function Team() {
@@ -30,7 +31,7 @@ export default function Team() {
         {
             name: "Varad Kulkarni",
             role: "President",
-            year: "Final Year",
+            year: "Third Year",
             branch: "Computer Engineering",
             image: "/varad.png",
             bio: "Passionate about blockchain development and open-source contributions. Leading the club's technical initiatives and community outreach.",
@@ -45,8 +46,8 @@ export default function Team() {
         {
             name: "Adiyan Baig",
             role: "Technical Head",
-            year: "Final Year",
-            branch: "Information Technology",
+            year: "Third Year",
+            branch: "Computer Engineering",
             image: "/adiyan.png",
             bio: "Focused on Web3 development and smart contract security. Organizing workshops and mentoring junior members.",
             email: "adiyan.baig@student.pccoepune.org",
@@ -85,17 +86,14 @@ export default function Team() {
                                 </span>
                             </h2>
                             <p className="text-xl text-[#a0aec0] max-w-3xl mx-auto font-body">
-                                Experienced faculty members guiding our journey in
-                                blockchain and decentralized technologies
+                                Experienced faculty members guiding our journey
+                                in blockchain and decentralized technologies
                             </p>
                         </div>
 
                         <div className="grid gap-8 md:grid-cols-2">
                             {facultyCoordinators.map((faculty, index) => (
-                                <SpotlightCard
-                                    key={index}
-                                    className="p-8"
-                                >
+                                <SpotlightCard key={index} className="p-8">
                                     <div className="flex flex-col items-center text-center">
                                         <Image
                                             src={faculty.image}
@@ -148,17 +146,14 @@ export default function Team() {
                                 </span>
                             </h2>
                             <p className="text-xl text-[#a0aec0] max-w-3xl mx-auto font-body">
-                                Passionate student leaders driving the vision and
-                                mission of our club
+                                Passionate student leaders driving the vision
+                                and mission of our club
                             </p>
                         </div>
 
                         <div className="grid gap-8 md:grid-cols-2">
                             {studentLeads.map((leader, index) => (
-                                <SpotlightCard
-                                    key={index}
-                                    className="p-8"
-                                >
+                                <SpotlightCard key={index} className="p-8">
                                     <div className="flex flex-col items-center text-center">
                                         <Image
                                             src={leader.image}
@@ -222,38 +217,40 @@ export default function Team() {
             </div>
 
             {/* Join Team Section */}
-            <section className="relative px-6 py-16 sm:py-20 bg-[#0a0e13] overflow-hidden">
-                <SectionBackground />
-                <div className="relative mx-auto max-w-4xl text-center">
-                    <SpotlightCard className="p-12">
-                        <h2 className="text-4xl sm:text-5xl font-bold mb-8 font-heading">
-                            Join Our{" "}
-                            <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
-                                Team
-                            </span>
-                        </h2>
-                        <p className="text-xl text-[#a0aec0] mb-10 max-w-2xl mx-auto font-body">
-                            Ready to be part of something bigger? Join our team and
-                            contribute to the future of blockchain and decentralized
-                            technologies.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a
-                                href="/contact"
-                                className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-lg font-medium text-black hover:bg-gray-200 transition-all duration-200 shadow-lg hover:shadow-xl font-body"
-                            >
-                                Apply to Join
-                            </a>
-                            <a
-                                href="/events"
-                                className="inline-flex items-center justify-center rounded-lg border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/10 transition-all duration-200 font-body"
-                            >
-                                Attend Events
-                            </a>
-                        </div>
-                    </SpotlightCard>
-                </div>
-            </section>
+            <CTASection
+                wrapperClassName="relative px-6 py-16 sm:py-20 bg-[#0a0e13] overflow-hidden"
+                showSectionBackground={true}
+                containerClassName="relative mx-auto max-w-4xl text-center"
+                spotlightCardClassName="p-12"
+                title={
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-8 font-heading">
+                        Join Our{" "}
+                        <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
+                            Team
+                        </span>
+                    </h2>
+                }
+                description={
+                    <p className="text-xl text-[#a0aec0] mb-10 max-w-2xl mx-auto font-body">
+                        Ready to be part of something bigger? Join our team and
+                        contribute to the future of blockchain and decentralized
+                        technologies.
+                    </p>
+                }
+                primary={{
+                    label: "Apply to Join",
+                    href: "/contact",
+                    className:
+                        "inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-lg font-medium text-black hover:bg-gray-200 transition-all duration-200 shadow-lg hover:shadow-xl font-body",
+                }}
+                secondary={{
+                    label: "Attend Events",
+                    href: "/events",
+                    className:
+                        "inline-flex items-center justify-center rounded-lg border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/10 transition-all duration-200 font-body",
+                }}
+                buttonsWrapperClassName="flex flex-col sm:flex-row gap-4 justify-center"
+            />
         </main>
     );
 }

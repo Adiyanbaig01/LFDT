@@ -1,4 +1,5 @@
 import { Trophy, Users, GitBranch, Award, Target, Globe } from "lucide-react";
+import CTASection from "@/components/sections/CTASection";
 
 export default function Achievements() {
     const stats = [
@@ -345,32 +346,36 @@ export default function Achievements() {
             </section>
 
             {/* CTA Section */}
-            <section className="px-6 py-20 sm:py-32 bg-gradient-to-r from-[#1a365d] to-[#3182ce]">
-                <div className="mx-auto max-w-4xl text-center">
+            <CTASection
+                wrapperClassName="px-6 py-20 sm:py-32 bg-gradient-to-r from-[#1a365d] to-[#3182ce]"
+                containerClassName="mx-auto max-w-4xl text-center"
+                showSpotlightCard={false}
+                title={
                     <h2 className="text-4xl sm:text-5xl font-bold mb-8 font-heading">
                         Be Part of Our Success
                     </h2>
+                }
+                description={
                     <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto font-body">
                         Join our community and contribute to the next chapter of
                         achievements. Together, we can build the future of
                         decentralized trust technologies.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a
-                            href="/contact"
-                            className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-lg font-medium text-[#1a365d] hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl font-body"
-                        >
-                            Join Our Community
-                        </a>
-                        <a
-                            href="/events"
-                            className="inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-lg font-medium text-white hover:bg-white hover:text-[#1a365d] transition-all duration-200 font-body"
-                        >
-                            Upcoming Events
-                        </a>
-                    </div>
-                </div>
-            </section>
+                }
+                primary={{
+                    label: "Join Our Community",
+                    href: "/contact",
+                    className:
+                        "inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-lg font-medium text-[#1a365d] hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl font-body",
+                }}
+                secondary={{
+                    label: "Upcoming Events",
+                    href: "/events",
+                    className:
+                        "inline-flex items-center justify-center rounded-lg border-2 border-white px-8 py-4 text-lg font-medium text-white hover:bg-white hover:text-[#1a365d] transition-all duration-200 font-body",
+                }}
+                buttonsWrapperClassName="flex flex-col sm:flex-row gap-4 justify-center"
+            />
         </main>
     );
 }

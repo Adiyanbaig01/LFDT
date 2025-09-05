@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Mail,
     MapPin,
@@ -5,12 +7,159 @@ import {
     Linkedin,
     Clock,
     ChevronDown,
+    Plus,
+    Minus,
 } from "lucide-react";
+import { useState } from "react";
+import emailjs from "@emailjs/browser";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import SectionBackground from "@/components/ui/SectionBackground";
 
 export default function Contact() {
+    const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        subject: "General Inquiry",
+        message: "",
+    });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID as
+        | string
+        | undefined;
+    const templateIdAdmin = process.env
+        .NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_ADMIN as string | undefined;
+    const templateIdUser = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_USER as
+        | string
+        | undefined;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY as
+        | string
+        | undefined;
+
+    const toggleFAQ = (index: number) => {
+        setOpenFAQ(openFAQ === index ? null : index);
+    };
+
+    const handleChange = (
+        event: React.ChangeEvent<
+            HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        >
+    ) => {
+        const { name, value } = event.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const isValidEmail = (email: string) => /.+@.+\..+/.test(email);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setSubmitError(null);
+        setSubmitSuccess(null);
+
+        if (
+            !formData.firstName.trim() ||
+            !formData.email.trim() ||
+            !formData.message.trim()
+        ) {
+            setSubmitError(
+                "Please fill in your first name, email, and message."
+            );
+            return;
+        }
+
+        if (!isValidEmail(formData.email)) {
+            setSubmitError("Please enter a valid email address.");
+            return;
+        }
+
+        if (!serviceId || !templateIdAdmin || !templateIdUser || !publicKey) {
+            setSubmitError(
+                "Email service is not configured. Please try again later."
+            );
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const fullName =
+                `${formData.firstName} ${formData.lastName}`.trim();
+
+            // Admin template params - matches your admin template setup
+            const templateParamsAdmin = {
+                from_name: fullName,
+                from_email: formData.email,
+                subject: formData.subject,
+                message: formData.message,
+                reply_to: formData.email,
+                to_name: "LFDT Team",
+                to_email: "pccoelfdt@gmail.com", // Force the recipient email
+            } as Record<string, unknown>;
+
+            // User template params - matches your user template setup
+            const templateParamsUser = {
+                to_name: fullName || formData.email,
+                to_email: formData.email,
+                subject: formData.subject,
+            } as Record<string, unknown>;
+
+            await emailjs.send(
+                serviceId,
+                templateIdAdmin,
+                templateParamsAdmin,
+                { publicKey }
+            );
+            await emailjs.send(serviceId, templateIdUser, templateParamsUser, {
+                publicKey,
+            });
+
+            setSubmitSuccess(
+                "Message sent! Check your inbox for a confirmation email."
+            );
+            setFormData({
+                firstName: "",
+                lastName: "",
+                email: "",
+                subject: "General Inquiry",
+                message: "",
+            });
+        } catch (error) {
+            setSubmitError(
+                "Something went wrong while sending your message. Please try again."
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const faqs = [
+        {
+            question: "How can I join the PCCoE LFDT Club?",
+            answer: "You can join by attending our events, filling out our contact form, or reaching out to any of our team members. We welcome all PCCoE students interested in blockchain and decentralized technologies.",
+        },
+        {
+            question: "Do I need prior blockchain experience?",
+            answer: "Not at all! We welcome students of all skill levels. Our workshops and events are designed to help beginners get started while also providing advanced content for experienced members.",
+        },
+        {
+            question: "What kind of events do you organize?",
+            answer: "We organize workshops, hackathons, guest talks, study circles, and collaborative projects. Check our Events page for the latest schedule and upcoming activities.",
+        },
+        {
+            question: "Can I contribute to open-source projects?",
+            answer: "Absolutely! We actively encourage and guide members to contribute to LFDT projects like Hyperledger Fabric, Besu, and other blockchain technologies.",
+        },
+        {
+            question: "When do you meet and where?",
+            answer: "We typically meet weekly on campus at PCCOE. Follow our social media or join our mailing list to stay updated on meeting schedules and locations.",
+        },
+    ];
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white">
             {/* Hero Section */}
@@ -42,7 +191,10 @@ export default function Contact() {
                                     </span>
                                 </h2>
                                 <SpotlightCard className="p-8">
-                                    <form className="space-y-6">
+                                    <form
+                                        className="space-y-6"
+                                        onSubmit={handleSubmit}
+                                    >
                                         <div className="grid gap-6 sm:grid-cols-2">
                                             <div>
                                                 <label className="block text-sm font-medium mb-2 font-body text-white">
@@ -50,8 +202,12 @@ export default function Contact() {
                                                 </label>
                                                 <input
                                                     type="text"
+                                                    name="firstName"
+                                                    value={formData.firstName}
+                                                    onChange={handleChange}
+                                                    required
                                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body text-white placeholder:text-white/50"
-                                                    placeholder="John"
+                                                    placeholder="e.g., Neil"
                                                 />
                                             </div>
                                             <div>
@@ -60,8 +216,11 @@ export default function Contact() {
                                                 </label>
                                                 <input
                                                     type="text"
+                                                    name="lastName"
+                                                    value={formData.lastName}
+                                                    onChange={handleChange}
                                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body text-white placeholder:text-white/50"
-                                                    placeholder="Doe"
+                                                    placeholder="e.g., Lunavat"
                                                 />
                                             </div>
                                         </div>
@@ -72,51 +231,100 @@ export default function Contact() {
                                             </label>
                                             <input
                                                 type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                required
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body text-white placeholder:text-white/50"
-                                                placeholder="john.doe@example.com"
+                                                placeholder="you@college.edu"
                                             />
                                         </div>
-
                                         <div>
                                             <label className="block text-sm font-medium mb-2 font-body text-white">
                                                 Subject
                                             </label>
-                                            <select className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body text-white">
-                                                <option className="bg-[#0a0e13] text-white">
+                                            <select
+                                                name="subject"
+                                                value={formData.subject}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body text-white appearance-none cursor-pointer hover:bg-white/10"
+                                                style={{
+                                                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                                                    backgroundPosition:
+                                                        "right 0.75rem center",
+                                                    backgroundRepeat:
+                                                        "no-repeat",
+                                                    backgroundSize:
+                                                        "1.5em 1.5em",
+                                                }}
+                                            >
+                                                <option
+                                                    value="General Inquiry"
+                                                    className="bg-[#1a202c] text-white py-2"
+                                                >
                                                     General Inquiry
                                                 </option>
-                                                <option className="bg-[#0a0e13] text-white">
+                                                <option
+                                                    value="Join the Club"
+                                                    className="bg-[#1a202c] text-white py-2"
+                                                >
                                                     Join the Club
                                                 </option>
-                                                <option className="bg-[#0a0e13] text-white">
+                                                <option
+                                                    value="Event Registration"
+                                                    className="bg-[#1a202c] text-white py-2"
+                                                >
                                                     Event Registration
                                                 </option>
-                                                <option className="bg-[#0a0e13] text-white">
+                                                <option
+                                                    value="Collaboration"
+                                                    className="bg-[#1a202c] text-white py-2"
+                                                >
                                                     Collaboration
                                                 </option>
-                                                <option className="bg-[#0a0e13] text-white">
+                                                <option
+                                                    value="Technical Support"
+                                                    className="bg-[#1a202c] text-white py-2"
+                                                >
                                                     Technical Support
                                                 </option>
                                             </select>
                                         </div>
-
                                         <div>
                                             <label className="block text-sm font-medium mb-2 font-body text-white">
                                                 Message
                                             </label>
                                             <textarea
                                                 rows={5}
+                                                name="message"
+                                                value={formData.message}
+                                                onChange={handleChange}
+                                                required
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-[#3182ce] focus:outline-none transition-colors font-body text-white placeholder:text-white/50"
-                                                placeholder="Tell us more about your inquiry..."
+                                                placeholder="Share a few details about your question or idea..."
                                             ></textarea>
                                         </div>
 
                                         <button
                                             type="submit"
-                                            className="w-full bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 font-body shadow-lg hover:shadow-xl"
+                                            disabled={isSubmitting}
+                                            className="w-full bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 font-body shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
-                                            Send Message
+                                            {isSubmitting
+                                                ? "Sending..."
+                                                : "Send Message"}
                                         </button>
+
+                                        {submitSuccess && (
+                                            <p className="text-green-400 font-body text-sm">
+                                                {submitSuccess}
+                                            </p>
+                                        )}
+                                        {submitError && (
+                                            <p className="text-red-400 font-body text-sm">
+                                                {submitError}
+                                            </p>
+                                        )}
                                     </form>
                                 </SpotlightCard>
                             </div>
@@ -186,68 +394,44 @@ export default function Contact() {
                             </p>
                         </div>
 
-                        <div className="space-y-6">
-                            <SpotlightCard className="p-6">
-                                <h3 className="text-xl font-bold mb-3 font-heading text-white">
-                                    How can I join the PCCoE LFDT Club?
-                                </h3>
-                                <p className="text-[#a0aec0] font-body">
-                                    You can join by attending our events,
-                                    filling out our contact form, or reaching
-                                    out to any of our team members. We welcome
-                                    all PCCoE students interested in blockchain
-                                    and decentralized technologies.
-                                </p>
-                            </SpotlightCard>
-
-                            <SpotlightCard className="p-6">
-                                <h3 className="text-xl font-bold mb-3 font-heading text-white">
-                                    Do I need prior blockchain experience?
-                                </h3>
-                                <p className="text-[#a0aec0] font-body">
-                                    Not at all! We welcome students of all skill
-                                    levels. Our workshops and events are
-                                    designed to help beginners get started while
-                                    also providing advanced content for
-                                    experienced members.
-                                </p>
-                            </SpotlightCard>
-
-                            <SpotlightCard className="p-6">
-                                <h3 className="text-xl font-bold mb-3 font-heading text-white">
-                                    What kind of events do you organize?
-                                </h3>
-                                <p className="text-[#a0aec0] font-body">
-                                    We organize workshops, hackathons, guest
-                                    talks, study circles, and collaborative
-                                    projects. Check our Events page for the
-                                    latest schedule and upcoming activities.
-                                </p>
-                            </SpotlightCard>
-
-                            <SpotlightCard className="p-6">
-                                <h3 className="text-xl font-bold mb-3 font-heading text-white">
-                                    Can I contribute to open-source projects?
-                                </h3>
-                                <p className="text-[#a0aec0] font-body">
-                                    Absolutely! We actively encourage and guide
-                                    members to contribute to LFDT projects like
-                                    Hyperledger Fabric, Besu, and other
-                                    blockchain technologies.
-                                </p>
-                            </SpotlightCard>
-
-                            <SpotlightCard className="p-6">
-                                <h3 className="text-xl font-bold mb-3 font-heading text-white">
-                                    When do you meet and where?
-                                </h3>
-                                <p className="text-[#a0aec0] font-body">
-                                    We typically meet weekly on campus at PCCOE.
-                                    Follow our social media or join our mailing
-                                    list to stay updated on meeting schedules
-                                    and locations.
-                                </p>
-                            </SpotlightCard>
+                        <div className="space-y-4">
+                            {faqs.map((faq, index) => (
+                                <SpotlightCard
+                                    key={index}
+                                    className="overflow-hidden"
+                                >
+                                    <button
+                                        onClick={() => toggleFAQ(index)}
+                                        className="w-full p-6 text-left focus:outline-none transition-all duration-200"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xl font-bold font-heading text-white pr-4">
+                                                {faq.question}
+                                            </h3>
+                                            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-transform duration-300">
+                                                {openFAQ === index ? (
+                                                    <Minus className="w-5 h-5 text-[#3182ce]" />
+                                                ) : (
+                                                    <Plus className="w-5 h-5 text-[#3182ce]" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <div
+                                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                            openFAQ === index
+                                                ? "max-h-96 opacity-100"
+                                                : "max-h-0 opacity-0"
+                                        }`}
+                                    >
+                                        <div className="px-6 pb-6">
+                                            <p className="text-[#a0aec0] font-body leading-relaxed">
+                                                {faq.answer}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </SpotlightCard>
+                            ))}
                         </div>
                     </div>
                 </section>
