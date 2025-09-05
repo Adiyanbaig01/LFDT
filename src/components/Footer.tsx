@@ -7,13 +7,12 @@ export default function Footer() {
                 <div className="grid gap-10 md:grid-cols-3">
                     {/* About */}
                     <div>
-                        <h3 className="text-lg font-bold mb-2">About</h3>
-                        <div className="mb-3 text-xl font-bold">
-                            PCCoE{" "}
-                            <span className="text-transparent bg-gradient-to-r from-[#3182ce] to-[#4299e2] bg-clip-text">
-                                LFDT
-                            </span>{" "}
-                            Club
+                        <div className="mb-3">
+                            <img
+                                src="/logo.png"
+                                alt="PCCoE LFDT Club"
+                                className="h-8 w-auto"
+                            />
                         </div>
                         <p className="text-[#a0aec0]">
                             Official student chapter of the Linux Foundation
@@ -33,10 +32,10 @@ export default function Footer() {
                             <p className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-white/80" />
                                 <a
-                                    href="mailto:dummyemail@gmail.com"
+                                    href="mailto:pccoelfdt@gmail.com"
                                     className="underline underline-offset-4 decoration-white/30 hover:decoration-white hover:text-white transition-colors"
                                 >
-                                    dummyemail@gmail.com
+                                    pccoelfdt@gmail.com
                                 </a>
                             </p>
                             <div>
