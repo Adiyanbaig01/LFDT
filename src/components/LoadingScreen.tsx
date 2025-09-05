@@ -12,6 +12,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     const [isFadingOut, setIsFadingOut] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const completionGuardRef = useRef(false);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -27,8 +28,11 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
                 // Complete the loading after fade animation (500ms)
                 fadeTimeoutRef.current = setTimeout(() => {
-                    setIsVisible(false);
-                    onComplete();
+                    if (!completionGuardRef.current) {
+                        completionGuardRef.current = true;
+                        setIsVisible(false);
+                        onComplete();
+                    }
                 }, 500);
             }
         };
@@ -38,8 +42,11 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
             if (!isFadingOut) {
                 setIsFadingOut(true);
                 fadeTimeoutRef.current = setTimeout(() => {
-                    setIsVisible(false);
-                    onComplete();
+                    if (!completionGuardRef.current) {
+                        completionGuardRef.current = true;
+                        setIsVisible(false);
+                        onComplete();
+                    }
                 }, 500);
             }
         };
@@ -73,11 +80,21 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 animate={{ opacity: isFadingOut ? 0 : 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+                className={
+                    "fixed inset-0 z-[9999] bg-black flex items-center justify-center" +
+                    (isFadingOut ? " pointer-events-none" : "")
+                }
                 style={{
                     width: "100vw",
                     height: "100vh",
                     overflow: "hidden",
+                }}
+                onAnimationComplete={() => {
+                    if (isFadingOut && !completionGuardRef.current) {
+                        completionGuardRef.current = true;
+                        setIsVisible(false);
+                        onComplete();
+                    }
                 }}
             >
                 <video
