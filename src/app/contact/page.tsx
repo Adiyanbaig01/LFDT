@@ -1,12 +1,7 @@
 "use client";
 
 import {
-    Mail,
     MapPin,
-    Instagram,
-    Linkedin,
-    Clock,
-    ChevronDown,
     Plus,
     Minus,
 } from "lucide-react";

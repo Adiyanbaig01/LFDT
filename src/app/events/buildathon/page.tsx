@@ -8,7 +8,6 @@ import {
     Target,
     Trophy,
     BookOpenCheck,
-    ExternalLink,
     CheckCircle,
     UserPlus,
 } from "lucide-react";
@@ -21,7 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function BuildathonPage() {
     const { user, registerForEvent, isRegisteredForEvent } = useAuth();
     const [isRegistered, setIsRegistered] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
+    const [, setIsRegistering] = useState(false);
     const [checkingRegistration, setCheckingRegistration] = useState(true);
 
     const eventId = "buildathon-2025";
@@ -67,9 +66,6 @@ export default function BuildathonPage() {
         }
     };
 
-    const handleExternalRegistration = () => {
-        window.open("https://unstop.com/o/k8dRB1U?lb=vW53kYRX", "_blank");
-    };
 
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white">

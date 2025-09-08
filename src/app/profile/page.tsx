@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { User, Phone, Building, GraduationCap, MapPin, Calendar, Briefcase, Edit, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import HeroSection from "@/components/HeroSection";
@@ -152,9 +153,11 @@ export default function ProfilePage() {
                                 <SpotlightCard className="p-6">
                                     <div className="text-center mb-6">
                                         {user?.photoURL ? (
-                                            <img
+                                            <Image
                                                 src={user.photoURL}
                                                 alt="Profile"
+                                                width={96}
+                                                height={96}
                                                 className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
                                             />
                                         ) : (
@@ -323,8 +326,8 @@ export default function ProfilePage() {
                                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#3182ce]"
                                                         >
                                                             <option value="">Select Program</option>
-                                                            <option value="Bachelor's">Bachelor's</option>
-                                                            <option value="Master's">Master's</option>
+                                                            <option value="Bachelor's">Bachelor&apos;s</option>
+                                                            <option value="Master's">Master&apos;s</option>
                                                             <option value="PhD">PhD</option>
                                                             <option value="Diploma">Diploma</option>
                                                             <option value="Certificate">Certificate</option>

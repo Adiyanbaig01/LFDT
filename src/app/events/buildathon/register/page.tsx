@@ -10,7 +10,7 @@ import SpotlightCard from "@/components/ui/SpotlightCard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function BuildathonRegisterPage() {
-    const router = useRouter();
+    const {} = useRouter();
     const { user, userData, createEventRegistration, isRegisteredForEvent, getEventRegistration } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -132,7 +132,7 @@ export default function BuildathonRegisterPage() {
                                 Welcome to Build-A-Thon 2025!
                             </h2>
                             <p className="text-white/70 mb-6">
-                                Your registration has been confirmed. You'll receive further details about the event soon.
+                                Your registration has been confirmed. You&apos;ll receive further details about the event soon.
                             </p>
                             <div className="space-y-3">
                                 <Link
@@ -272,7 +272,7 @@ export default function BuildathonRegisterPage() {
                                             required
                                         />
                                         <p className="text-white/50 text-sm mt-1">
-                                            We'll use this for event updates and coordination
+                                            We&apos;ll use this for event updates and coordination
                                         </p>
                                     </div>
                                 </div>

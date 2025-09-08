@@ -262,7 +262,7 @@ function LoginContent() {
                         <div className="mt-8 pt-6 border-t border-white/10">
                             <div className="text-center mb-4">
                                 <p className="text-white/60 text-sm">
-                                    Don't have an account?{" "}
+                                    Don&apos;t have an account?{" "}
                                     <Link
                                         href={`/auth/register?returnUrl=${encodeURIComponent(
                                             returnUrl

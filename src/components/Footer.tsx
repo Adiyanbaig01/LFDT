@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Instagram, Linkedin, Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
@@ -8,9 +9,11 @@ export default function Footer() {
                     {/* About */}
                     <div>
                         <div className="mb-3">
-                            <img
+                            <Image
                                 src="/logo.png"
                                 alt="PCCoE LFDT Club"
+                                width={120}
+                                height={32}
                                 className="h-8 w-auto"
                             />
                         </div>
