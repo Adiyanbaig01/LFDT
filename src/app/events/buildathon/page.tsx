@@ -66,7 +66,6 @@ export default function BuildathonPage() {
         }
     };
 
-
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white">
             {/* Hero */}
@@ -91,25 +90,32 @@ export default function BuildathonPage() {
                 </div>
                 <div className="mt-8">
                     {checkingRegistration ? (
-                        <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-8 py-4 text-lg font-medium text-white">
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Checking Registration...
+                        <div className="flex justify-center">
+                            <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-8 py-4 text-lg font-medium text-white">
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Checking Registration...
+                            </div>
                         </div>
                     ) : isRegistered ? (
-                        <div className="flex flex-col sm:flex-row gap-3 items-center">
-                            <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
-                                <CheckCircle className="w-5 h-5" />
-                                Already Registered
+                        <div className="grid grid-cols-3 max-w-4xl mx-auto items-center">
+                            <div></div>
+                            <div className="flex justify-center">
+                                <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
+                                    <CheckCircle className="w-5 h-5" />
+                                    Already Registered
+                                </div>
                             </div>
-                            <button
-                                onClick={() =>
-                                    (window.location.href =
-                                        "/events/buildathon/edit")
-                                }
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-6 py-3 text-base font-medium text-white hover:bg-white/20 transition-all duration-200 font-body"
-                            >
-                                Edit Registration
-                            </button>
+                            <div className="flex ml-4">
+                                <button
+                                    onClick={() =>
+                                        (window.location.href =
+                                            "/events/buildathon/edit")
+                                    }
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-6 py-3 text-base font-medium text-white hover:bg-white/20 transition-all duration-200 font-body"
+                                >
+                                    Edit Registration
+                                </button>
+                            </div>
                         </div>
                     ) : user ? (
                         <div className="flex justify-center">
@@ -125,18 +131,20 @@ export default function BuildathonPage() {
                             </button>
                         </div>
                     ) : (
-                        <div className="text-center">
-                            <button
-                                onClick={handleRegistration}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body mb-4"
-                            >
-                                <UserPlus className="w-5 h-5" />
-                                Sign In to Register
-                            </button>
-                            <p className="text-white/60 text-sm mb-4">
-                                Sign in with your Google or GitHub account to
-                                register
-                            </p>
+                        <div className="flex justify-center">
+                            <div className="text-center">
+                                <button
+                                    onClick={handleRegistration}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body mb-4"
+                                >
+                                    <UserPlus className="w-5 h-5" />
+                                    Sign In to Register
+                                </button>
+                                <p className="text-white/60 text-sm mb-4">
+                                    Sign in with your Google or GitHub account
+                                    to register
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -144,7 +152,6 @@ export default function BuildathonPage() {
 
             {/* Event Details & Guidelines - Combined Section */}
             <section className="relative px-6 py-16 sm:py-20 bg-[#0a0e13] overflow-hidden">
-                <SectionBackground />
                 <div className="relative mx-auto max-w-7xl space-y-8">
                     {/* Process & Format with Rewards */}
                     <div className="grid gap-8 lg:grid-cols-3">

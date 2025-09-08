@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { User, Phone, Building, GraduationCap, MapPin, Calendar, Briefcase, Edit, CheckCircle, AlertCircle } from "lucide-react";
+import { User, Phone, Building, GraduationCap, MapPin, Calendar, Briefcase, Edit, CheckCircle, AlertCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function ProfilePage() {
-    const { user, userData, updateProfile, refreshUserData } = useAuth();
+    const { user, userData, updateProfile, refreshUserData, signOut } = useAuth();
+    const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [isSigningOut, setIsSigningOut] = useState(false);
     
     const [profileData, setProfileData] = useState({
         phone: '',
@@ -73,6 +76,19 @@ export default function ProfilePage() {
             setError(error.message || 'Failed to update profile. Please try again.');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleSignOut = async () => {
+        try {
+            setIsSigningOut(true);
+            await signOut();
+            // Force a hard reload of the home page to ensure all state is cleared
+            window.location.href = '/';
+        } catch (error: any) {
+            console.error('Sign-out error:', error);
+            setError(error.message || 'Failed to sign out. Please try again.');
+            setIsSigningOut(false);
         }
     };
 
@@ -173,14 +189,29 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={() => setIsEditing(!isEditing)}
-                                        disabled={isSubmitting}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                        {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-                                    </button>
+                                    <div className="space-y-3">
+                                        <button
+                                            onClick={() => setIsEditing(!isEditing)}
+                                            disabled={isSubmitting || isSigningOut}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+                                        </button>
+                                        
+                                        <button
+                                            onClick={handleSignOut}
+                                            disabled={isSigningOut || isSubmitting}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg font-medium hover:bg-white/20 transition-colors disabled:opacity-50"
+                                        >
+                                            {isSigningOut ? (
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            ) : (
+                                                <LogOut className="w-4 h-4" />
+                                            )}
+                                            Sign Out
+                                        </button>
+                                    </div>
                                 </SpotlightCard>
                             </div>
 

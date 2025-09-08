@@ -124,7 +124,7 @@ export default function BuildathonEditPage() {
             isOpen: true,
             type: 'confirm',
             title: 'Withdraw Registration',
-            message: 'Are you sure you want to withdraw from Build-A-Thon 2025? This action cannot be undone.',
+            message: 'Are you sure you want to withdraw from Build-A-Thon 2025? You can resubmit your registration later if needed.',
             onConfirm: async () => {
                 setDialogState(prev => ({ ...prev, isOpen: false }));
 
@@ -136,10 +136,48 @@ export default function BuildathonEditPage() {
                         status: 'withdrawn'
                     });
 
-                    router.push('/events/buildathon');
+                    setFormData(prev => ({ ...prev, status: 'withdrawn' }));
+                    setDialogState({
+                        isOpen: true,
+                        type: 'info',
+                        title: 'Registration Withdrawn',
+                        message: 'Your registration has been withdrawn. You can resubmit anytime before the deadline.',
+                        onConfirm: () => {
+                            setDialogState(prev => ({ ...prev, isOpen: false }));
+                        }
+                    });
                 } catch (error: any) {
                     console.error('Withdraw error:', error);
                     setError(error.message || 'Failed to withdraw. Please try again.');
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }
+        });
+    };
+
+    const handleResubmit = async () => {
+        setDialogState({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Resubmit Registration',
+            message: 'Do you want to reactivate your registration for Build-A-Thon 2025?',
+            onConfirm: async () => {
+                setDialogState(prev => ({ ...prev, isOpen: false }));
+
+                try {
+                    setIsSubmitting(true);
+                    setError(null);
+
+                    await updateEventRegistration(eventId, {
+                        status: 'registered'
+                    });
+
+                    setFormData(prev => ({ ...prev, status: 'registered' }));
+                    setSuccess(true);
+                } catch (error: any) {
+                    console.error('Resubmit error:', error);
+                    setError(error.message || 'Failed to resubmit. Please try again.');
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -315,7 +353,7 @@ export default function BuildathonEditPage() {
                                             onChange={handleInputChange}
                                             placeholder="Enter your team name"
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
-                                            disabled={isSubmitting || formData.status === 'submitted'}
+                                            disabled={isSubmitting || formData.status === 'submitted' || formData.status === 'withdrawn'}
                                             required
                                         />
                                     </div>
@@ -329,7 +367,7 @@ export default function BuildathonEditPage() {
                                             value={formData.memberCount}
                                             onChange={handleInputChange}
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#3182ce]"
-                                            disabled={isSubmitting || formData.status === 'submitted'}
+                                            disabled={isSubmitting || formData.status === 'submitted' || formData.status === 'withdrawn'}
                                         >
                                             <option value={1}>1 Member (Solo)</option>
                                             <option value={2}>2 Members</option>
@@ -356,7 +394,7 @@ export default function BuildathonEditPage() {
                                             onChange={handleInputChange}
                                             placeholder="Enter your phone number"
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || formData.status === 'withdrawn'}
                                             required
                                         />
                                     </div>
@@ -379,7 +417,7 @@ export default function BuildathonEditPage() {
                                             onChange={handleInputChange}
                                             placeholder="https://drive.google.com/drive/folders/..."
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || formData.status === 'withdrawn'}
                                         />
                                         {formData.status === 'submitted' && (
                                             <p className="text-green-300 text-sm mt-1 flex items-center gap-2">
@@ -403,7 +441,7 @@ export default function BuildathonEditPage() {
                                         </Link>
 
                                         {/* Save Changes - Center */}
-                                        {formData.status !== 'submitted' && (
+                                        {formData.status !== 'submitted' && formData.status !== 'withdrawn' && (
                                             <button
                                                 type="submit"
                                                 disabled={isSubmitting || !formData.teamName || !formData.phone}
@@ -415,6 +453,23 @@ export default function BuildathonEditPage() {
                                                     <Edit className="w-5 h-5" />
                                                 )}
                                                 Save Changes
+                                            </button>
+                                        )}
+
+                                        {/* Resubmit button for withdrawn status */}
+                                        {formData.status === 'withdrawn' && (
+                                            <button
+                                                type="button"
+                                                onClick={handleResubmit}
+                                                disabled={isSubmitting}
+                                                className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isSubmitting ? (
+                                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                ) : (
+                                                    <CheckCircle className="w-5 h-5" />
+                                                )}
+                                                Resubmit Registration
                                             </button>
                                         )}
 
