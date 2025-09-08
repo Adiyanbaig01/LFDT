@@ -4,10 +4,24 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+// Dynamically import AuthButton to avoid hydration issues
+const AuthButton = dynamic(() => import('@/components/auth/AuthButton'), {
+    ssr: false,
+    loading: () => (
+        <div className="w-12 h-12 bg-white/10 rounded-lg animate-pulse" />
+    ),
+});
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const pathname = usePathname();
+    
+    // Check if we're on an events page
+    const isEventsPage = pathname?.startsWith('/events');
 
     useEffect(() => {
         const handleScroll = () => {
@@ -65,20 +79,27 @@ export default function Navbar() {
                         </div>
                     </div>
 
-                    {/* Right area: Right logo and hamburger (right-aligned on small/medium) */}
+                    {/* Right area: Auth button on events pages or Right logo on other pages */}
                     <div className="flex justify-end items-center gap-3 md:gap-4">
-                        {/* Right Logo (hidden on mobile, visible on md+) */}
-                        <div className="hidden md:flex flex-shrink-0 justify-end">
-                            <Link href="/" className="flex items-center">
-                                <Image
-                                    src="/india.png"
-                                    alt="Right Logo"
-                                    width={200}
-                                    height={200}
-                                    className="object-contain w-48 h-auto"
-                                />
-                            </Link>
-                        </div>
+                        {isEventsPage ? (
+                            /* Auth Button for events pages */
+                            <div className="flex-shrink-0">
+                                <AuthButton />
+                            </div>
+                        ) : (
+                            /* Right Logo (hidden on mobile, visible on md+) for other pages */
+                            <div className="hidden md:flex flex-shrink-0 justify-end">
+                                <Link href="/" className="flex items-center">
+                                    <Image
+                                        src="/india.png"
+                                        alt="Right Logo"
+                                        width={200}
+                                        height={200}
+                                        className="object-contain w-48 h-auto"
+                                    />
+                                </Link>
+                            </div>
+                        )}
 
                         {/* Menu button (visible on small/medium; hidden on large+) */}
                         <div className="lg:hidden justify-self-end">

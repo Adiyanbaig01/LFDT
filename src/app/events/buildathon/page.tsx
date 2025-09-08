@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Calendar,
     Clock,
@@ -7,12 +9,65 @@ import {
     Trophy,
     BookOpenCheck,
     ExternalLink,
+    CheckCircle,
+    UserPlus,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import HeroSection from "@/components/HeroSection";
 import SectionBackground from "@/components/ui/SectionBackground";
 import SpotlightCard from "@/components/ui/SpotlightCard";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function BuildathonPage() {
+    const { user, registerForEvent, isRegisteredForEvent } = useAuth();
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [checkingRegistration, setCheckingRegistration] = useState(true);
+
+    const eventId = "buildathon-2025";
+
+    useEffect(() => {
+        const checkRegistration = async () => {
+            if (user) {
+                try {
+                    const registered = await isRegisteredForEvent(eventId);
+                    setIsRegistered(registered);
+                } catch (error) {
+                    console.error("Error checking registration:", error);
+                } finally {
+                    setCheckingRegistration(false);
+                }
+            } else {
+                setCheckingRegistration(false);
+            }
+        };
+
+        checkRegistration();
+    }, [user, isRegisteredForEvent]);
+
+    const handleRegistration = async () => {
+        if (!user) {
+            alert("Please sign in to register for this event.");
+            return;
+        }
+
+        try {
+            setIsRegistering(true);
+            await registerForEvent(eventId);
+            setIsRegistered(true);
+            alert("Successfully registered for Build-A-Thon 2025!");
+        } catch (error) {
+            console.error("Registration error:", error);
+            alert("Failed to register for the event. Please try again.");
+        } finally {
+            setIsRegistering(false);
+        }
+    };
+
+    const handleExternalRegistration = () => {
+        window.open("https://unstop.com/o/k8dRB1U?lb=vW53kYRX", "_blank");
+    };
+
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white">
             {/* Hero */}
@@ -36,15 +91,42 @@ export default function BuildathonPage() {
                     </div>
                 </div>
                 <div className="mt-8">
-                    <a
-                        href="https://unstop.com/o/k8dRB1U?lb=vW53kYRX"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body"
-                    >
-                        Register Now
-                        <ExternalLink className="w-5 h-5" />
-                    </a>
+                    {checkingRegistration ? (
+                        <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-8 py-4 text-lg font-medium text-white">
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Checking Registration...
+                        </div>
+                    ) : isRegistered ? (
+                        <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
+                            <CheckCircle className="w-5 h-5" />
+                            Already Registered
+                        </div>
+                    ) : user ? (
+                        <button
+                            onClick={handleRegistration}
+                            disabled={isRegistering}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isRegistering ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <UserPlus className="w-5 h-5" />
+                            )}
+                            {isRegistering ? "Registering..." : "Register Now"}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() =>
+                                alert(
+                                    "Please sign in using the button in the navigation bar to register for this event."
+                                )
+                            }
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/20 transition-all duration-200 font-body cursor-pointer"
+                        >
+                            <UserPlus className="w-5 h-5" />
+                            Sign In to Register
+                        </button>
+                    )}
                 </div>
             </HeroSection>
 

@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import SmoothScroll from "@/components/SmoothScroll";
 import Layout from "@/components/Layout";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,10 +51,12 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className + "antialiased font-body"}>
-                <SmoothScroll />
-                <Layout>{children}</Layout>
-                <SpeedInsights />
-                <Analytics />
+                <AuthProvider>
+                    <SmoothScroll />
+                    <Layout>{children}</Layout>
+                    <SpeedInsights />
+                    <Analytics />
+                </AuthProvider>
             </body>
         </html>
     );
