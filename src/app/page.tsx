@@ -1,7 +1,6 @@
 "use client";
+import { lazy, Suspense } from "react";
 import Orb from "@/components/Orb";
-import InteractiveBackground from "@/components/InteractiveBackground";
-import LoadingScreen from "@/components/LoadingScreen";
 import AboutSection from "@/components/sections/AboutSection";
 import EventsSection from "@/components/sections/EventsSection";
 import CTASection from "@/components/sections/CTASection";
@@ -15,6 +14,10 @@ import {
     Rocket,
 } from "lucide-react";
 
+// Lazy load heavy components
+const InteractiveBackground = lazy(() => import("@/components/InteractiveBackground"));
+const LoadingScreen = lazy(() => import("@/components/LoadingScreen"));
+
 export default function Home() {
     const { showLoading, isLoadingComplete, handleLoadingComplete } =
         useLoadingScreen();
@@ -26,7 +29,9 @@ export default function Home() {
                 {/* Hero Section */}
                 <section className="relative px-6 py-20 sm:py-32 min-h-screen  overflow-hidden flex items-center">
                     {/* Interactive 3D cubes and ripple background (behind everything) */}
-                    <InteractiveBackground />
+                    <Suspense fallback={null}>
+                        <InteractiveBackground />
+                    </Suspense>
                     {/* Large Orb encompassing hero content */}
                     <div className="absolute inset-0 z-[10] flex items-center justify-center pointer-events-none">
                         <div className="w-[1000px] h-[1000px] opacity-100">
@@ -153,7 +158,9 @@ export default function Home() {
 
             {/* Loading Screen - overlays everything */}
             {showLoading && (
-                <LoadingScreen onComplete={handleLoadingComplete} />
+                <Suspense fallback={null}>
+                    <LoadingScreen onComplete={handleLoadingComplete} />
+                </Suspense>
             )}
         </>
     );

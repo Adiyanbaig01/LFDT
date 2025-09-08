@@ -9,6 +9,7 @@ import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { EventRegistration } from "@/lib/firebase/auth";
+import Dialog from "@/components/ui/Dialog";
 
 export default function BuildathonEditPage() {
     const router = useRouter();
@@ -27,6 +28,14 @@ export default function BuildathonEditPage() {
         phone: '',
         driveFolderUrl: '',
         status: 'registered' as 'registered' | 'submitted' | 'withdrawn'
+    });
+    
+    const [dialogState, setDialogState] = useState({
+        isOpen: false,
+        type: 'info' as 'info' | 'success' | 'error' | 'confirm',
+        title: '',
+        message: '',
+        onConfirm: () => {}
     });
 
     useEffect(() => {
@@ -97,7 +106,7 @@ export default function BuildathonEditPage() {
                 contact: {
                     phone: formData.phone
                 },
-                driveFolderUrl: formData.driveFolderUrl || undefined,
+                driveFolderUrl: formData.driveFolderUrl || '',
                 status: formData.status
             });
 
@@ -111,25 +120,31 @@ export default function BuildathonEditPage() {
     };
 
     const handleWithdraw = async () => {
-        if (!confirm('Are you sure you want to withdraw from Build-A-Thon 2025? This action cannot be undone.')) {
-            return;
-        }
+        setDialogState({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Withdraw Registration',
+            message: 'Are you sure you want to withdraw from Build-A-Thon 2025? This action cannot be undone.',
+            onConfirm: async () => {
+                setDialogState(prev => ({ ...prev, isOpen: false }));
 
-        try {
-            setIsSubmitting(true);
-            setError(null);
+                try {
+                    setIsSubmitting(true);
+                    setError(null);
 
-            await updateEventRegistration(eventId, {
-                status: 'withdrawn'
-            });
+                    await updateEventRegistration(eventId, {
+                        status: 'withdrawn'
+                    });
 
-            router.push('/events/buildathon');
-        } catch (error: any) {
-            console.error('Withdraw error:', error);
-            setError(error.message || 'Failed to withdraw. Please try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
+                    router.push('/events/buildathon');
+                } catch (error: any) {
+                    console.error('Withdraw error:', error);
+                    setError(error.message || 'Failed to withdraw. Please try again.');
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }
+        });
     };
 
     const handleSubmitProject = async () => {
@@ -138,27 +153,41 @@ export default function BuildathonEditPage() {
             return;
         }
 
-        if (!confirm('Are you ready to submit your project? Make sure your Google Drive folder contains all required files.')) {
-            return;
-        }
+        setDialogState({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Submit Project',
+            message: 'Are you ready to submit your project? Make sure your Google Drive folder contains all required files.',
+            onConfirm: async () => {
+                setDialogState(prev => ({ ...prev, isOpen: false }));
 
-        try {
-            setIsSubmitting(true);
-            setError(null);
+                try {
+                    setIsSubmitting(true);
+                    setError(null);
 
-            await updateEventRegistration(eventId, {
-                driveFolderUrl: formData.driveFolderUrl,
-                status: 'submitted'
-            });
+                    await updateEventRegistration(eventId, {
+                        driveFolderUrl: formData.driveFolderUrl,
+                        status: 'submitted'
+                    });
 
-            setFormData(prev => ({ ...prev, status: 'submitted' }));
-            setSuccess(true);
-        } catch (error: any) {
-            console.error('Submit project error:', error);
-            setError(error.message || 'Failed to submit project. Please try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
+                    setFormData(prev => ({ ...prev, status: 'submitted' }));
+                    setDialogState({
+                        isOpen: true,
+                        type: 'success',
+                        title: 'Project Submitted!',
+                        message: 'Your project has been successfully submitted for Build-A-Thon 2025.',
+                        onConfirm: () => {
+                            setSuccess(true);
+                        }
+                    });
+                } catch (error: any) {
+                    console.error('Submit project error:', error);
+                    setError(error.message || 'Failed to submit project. Please try again.');
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }
+        });
     };
 
     if (loading) {
@@ -361,22 +390,24 @@ export default function BuildathonEditPage() {
                                     </div>
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                                    <Link
-                                        href="/events/buildathon"
-                                        className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
-                                    >
-                                        <ArrowLeft className="w-4 h-4" />
-                                        Back to Event
-                                    </Link>
+                                {/* Action Buttons - Improved Layout */}
+                                <div className="pt-6 border-t border-white/10">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        {/* Back button - Left aligned */}
+                                        <Link
+                                            href="/events/buildathon"
+                                            className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                            Back to Event
+                                        </Link>
 
-                                    {formData.status !== 'submitted' && (
-                                        <>
+                                        {/* Save Changes - Center */}
+                                        {formData.status !== 'submitted' && (
                                             <button
                                                 type="submit"
                                                 disabled={isSubmitting || !formData.teamName || !formData.phone}
-                                                className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {isSubmitting ? (
                                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -385,34 +416,52 @@ export default function BuildathonEditPage() {
                                                 )}
                                                 Save Changes
                                             </button>
+                                        )}
 
+                                        {/* Submit Project - Right aligned */}
+                                        {formData.status === 'registered' && (
                                             <button
                                                 type="button"
                                                 onClick={handleSubmitProject}
                                                 disabled={isSubmitting || !formData.driveFolderUrl}
-                                                className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="flex items-center justify-center gap-3 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <CheckCircle className="w-5 h-5" />
                                                 Submit Project
                                             </button>
-                                        </>
-                                    )}
+                                        )}
+                                    </div>
 
+                                    {/* Withdraw button - Full width below */}
                                     {formData.status === 'registered' && (
-                                        <button
-                                            type="button"
-                                            onClick={handleWithdraw}
-                                            disabled={isSubmitting}
-                                            className="px-6 py-3 bg-red-600/20 border border-red-500/50 text-red-300 rounded-lg font-medium hover:bg-red-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Withdraw
-                                        </button>
+                                        <div className="mt-4">
+                                            <button
+                                                type="button"
+                                                onClick={handleWithdraw}
+                                                disabled={isSubmitting}
+                                                className="w-full px-6 py-3 bg-red-600/20 border border-red-500/50 text-red-300 rounded-lg font-medium hover:bg-red-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                Withdraw Registration
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </form>
                         </SpotlightCard>
                     </div>
                 </section>
+                
+                {/* Dialog Component */}
+                <Dialog
+                    isOpen={dialogState.isOpen}
+                    onClose={() => setDialogState(prev => ({ ...prev, isOpen: false }))}
+                    title={dialogState.title}
+                    message={dialogState.message}
+                    type={dialogState.type}
+                    onConfirm={dialogState.onConfirm}
+                    confirmText={dialogState.type === 'confirm' ? 'Confirm' : 'OK'}
+                    cancelText="Cancel"
+                />
             </main>
         </ProtectedRoute>
     );

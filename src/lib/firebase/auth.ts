@@ -1,8 +1,5 @@
 import {
   signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
   signOut,
   GoogleAuthProvider,
   GithubAuthProvider,
@@ -59,10 +56,19 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
     return result;
   } catch (error: any) {
     console.error('Error signing in with Google:', error);
-    if (error.code === 'auth/account-exists-with-different-credential') {
-      throw new Error('An account already exists with the same email address but different sign-in credentials. Please sign in using the original provider.');
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Sign-in popup was closed. Please try again.');
     }
-    throw error;
+    if (error.code === 'auth/cancelled-popup-request') {
+      throw new Error('Another sign-in popup is already open.');
+    }
+    if (error.code === 'auth/account-exists-with-different-credential') {
+      throw new Error('An account already exists with the same email address but different sign-in credentials.');
+    }
+    if (error.code === 'auth/popup-blocked') {
+      throw new Error('Sign-in popup was blocked by your browser. Please allow popups and try again.');
+    }
+    throw new Error('Failed to sign in with Google. Please try again.');
   }
 };
 
@@ -74,60 +80,22 @@ export const signInWithGitHub = async (): Promise<UserCredential> => {
     return result;
   } catch (error: any) {
     console.error('Error signing in with GitHub:', error);
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Sign-in popup was closed. Please try again.');
+    }
+    if (error.code === 'auth/cancelled-popup-request') {
+      throw new Error('Another sign-in popup is already open.');
+    }
     if (error.code === 'auth/account-exists-with-different-credential') {
-      throw new Error('An account already exists with the same email address but different sign-in credentials. Please sign in using the original provider.');
+      throw new Error('An account already exists with the same email address but different sign-in credentials.');
     }
-    throw error;
+    if (error.code === 'auth/popup-blocked') {
+      throw new Error('Sign-in popup was blocked by your browser. Please allow popups and try again.');
+    }
+    throw new Error('Failed to sign in with GitHub. Please try again.');
   }
 };
 
-// Sign in with email and password
-export const signInWithEmail = async (email: string, password: string): Promise<UserCredential> => {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    await createOrUpdateUser(result.user, 'email');
-    return result;
-  } catch (error: any) {
-    console.error('Error signing in with email:', error);
-    if (error.code === 'auth/user-not-found') {
-      throw new Error('No account found with this email address.');
-    }
-    if (error.code === 'auth/wrong-password') {
-      throw new Error('Incorrect password.');
-    }
-    if (error.code === 'auth/invalid-email') {
-      throw new Error('Invalid email address.');
-    }
-    throw error;
-  }
-};
-
-// Create account with email and password
-export const createAccountWithEmail = async (email: string, password: string, displayName: string): Promise<UserCredential> => {
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Update the user's display name
-    await updateProfile(result.user, {
-      displayName: displayName
-    });
-    
-    await createOrUpdateUser(result.user, 'email');
-    return result;
-  } catch (error: any) {
-    console.error('Error creating account with email:', error);
-    if (error.code === 'auth/email-already-in-use') {
-      throw new Error('An account already exists with this email address.');
-    }
-    if (error.code === 'auth/weak-password') {
-      throw new Error('Password should be at least 6 characters.');
-    }
-    if (error.code === 'auth/invalid-email') {
-      throw new Error('Invalid email address.');
-    }
-    throw error;
-  }
-};
 
 // Sign out
 export const signOutUser = async (): Promise<void> => {
@@ -248,7 +216,7 @@ export interface EventRegistration {
   contact: {
     phone: string;
   };
-  driveFolderUrl?: string;
+  driveFolderUrl: string; // Make it required but can be empty string
   status: 'registered' | 'submitted' | 'withdrawn';
   createdAt: any;
   updatedAt: any;
@@ -259,21 +227,46 @@ export const createEventRegistration = async (uid: string, userEmail: string, ev
   try {
     const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
     
+    // Check if registration already exists
+    const existingDoc = await getDoc(registrationRef);
+    if (existingDoc.exists()) {
+      throw new Error('You have already registered for this event.');
+    }
+    
     const registration: EventRegistration = {
       eventId,
       userId: uid,
       userEmail,
       team: registrationData.team || { teamName: '', memberCount: 1 },
       contact: registrationData.contact || { phone: '' },
-      driveFolderUrl: registrationData.driveFolderUrl,
+      driveFolderUrl: registrationData.driveFolderUrl || '', // Ensure it's not undefined
       status: 'registered',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
     
+    // Create the registration document
     await setDoc(registrationRef, registration);
-  } catch (error) {
+    
+    // Update user's events array
+    const userRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data() as UserData;
+      const currentEvents = userData.events || [];
+      
+      if (!currentEvents.includes(eventId)) {
+        await updateDoc(userRef, {
+          events: [...currentEvents, eventId]
+        });
+      }
+    }
+  } catch (error: any) {
     console.error('Error creating event registration:', error);
+    if (error.code === 'permission-denied') {
+      throw new Error('Permission denied. Please ensure you are signed in and try again.');
+    }
     throw error;
   }
 };
@@ -282,8 +275,15 @@ export const createEventRegistration = async (uid: string, userEmail: string, ev
 export const updateEventRegistration = async (uid: string, eventId: string, updateData: Partial<EventRegistration>): Promise<void> => {
   try {
     const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
+    
+    // Ensure driveFolderUrl is not undefined if provided
+    const safeUpdateData = { ...updateData };
+    if ('driveFolderUrl' in safeUpdateData && safeUpdateData.driveFolderUrl === undefined) {
+      safeUpdateData.driveFolderUrl = '';
+    }
+    
     await updateDoc(registrationRef, {
-      ...updateData,
+      ...safeUpdateData,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {

@@ -6,8 +6,6 @@ import { auth } from '@/lib/firebase/config';
 import { 
   signInWithGoogle, 
   signInWithGitHub, 
-  signInWithEmail,
-  createAccountWithEmail,
   signOutUser, 
   UserData,
   getUserData,
@@ -26,8 +24,6 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  createAccountWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   registerForEvent: (eventId: string) => Promise<void>;
   isRegisteredForEvent: (eventId: string) => Promise<boolean>;
@@ -106,29 +102,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const handleEmailSignIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      await signInWithEmail(email, password);
-    } catch (error) {
-      console.error('Email sign-in error:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateAccountWithEmail = async (email: string, password: string, displayName: string) => {
-    try {
-      setLoading(true);
-      await createAccountWithEmail(email, password, displayName);
-    } catch (error) {
-      console.error('Create account error:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -216,8 +189,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     signInWithGoogle: handleGoogleSignIn,
     signInWithGitHub: handleGitHubSignIn,
-    signInWithEmail: handleEmailSignIn,
-    createAccountWithEmail: handleCreateAccountWithEmail,
     signOut: handleSignOut,
     registerForEvent: handleRegisterForEvent,
     isRegisteredForEvent: handleIsRegisteredForEvent,

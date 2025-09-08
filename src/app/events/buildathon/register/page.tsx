@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Dialog from "@/components/ui/Dialog";
 
 export default function BuildathonRegisterPage() {
     const {} = useRouter();
@@ -26,6 +27,8 @@ export default function BuildathonRegisterPage() {
         phone: '',
         driveFolderUrl: ''
     });
+    
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     useEffect(() => {
         const checkExistingRegistration = async () => {
@@ -44,6 +47,12 @@ export default function BuildathonRegisterPage() {
                                 driveFolderUrl: existingRegistration.driveFolderUrl || ''
                             });
                         }
+                    } else if (userData?.profile?.phone) {
+                        // Auto-fill phone number from user profile if available
+                        setFormData(prev => ({
+                            ...prev,
+                            phone: userData.profile.phone || ''
+                        }));
                     }
                 } catch (error) {
                     console.error('Error checking registration:', error);
@@ -56,7 +65,7 @@ export default function BuildathonRegisterPage() {
         };
 
         checkExistingRegistration();
-    }, [user, isRegisteredForEvent, getEventRegistration]);
+    }, [user, userData, isRegisteredForEvent, getEventRegistration]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -69,13 +78,28 @@ export default function BuildathonRegisterPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Validation
         if (!formData.teamName || !formData.phone) {
             setError('Please fill in all required fields');
             return;
         }
 
-        if (formData.phone.length < 10) {
-            setError('Please enter a valid phone number');
+        // Validate team name
+        if (formData.teamName.trim().length < 2) {
+            setError('Team name must be at least 2 characters long');
+            return;
+        }
+
+        // Validate phone number (basic validation for 10 digits)
+        const phoneRegex = /^[0-9]{10,}$/;
+        if (!phoneRegex.test(formData.phone.replace(/[\s-]/g, ''))) {
+            setError('Please enter a valid phone number (at least 10 digits)');
+            return;
+        }
+
+        // Validate drive URL if provided (but don't require it)
+        if (formData.driveFolderUrl && formData.driveFolderUrl.trim() !== '' && !formData.driveFolderUrl.startsWith('http')) {
+            setError('Please enter a valid URL for the Google Drive folder');
             return;
         }
 
@@ -85,19 +109,30 @@ export default function BuildathonRegisterPage() {
 
             await createEventRegistration(eventId, {
                 team: {
-                    teamName: formData.teamName,
+                    teamName: formData.teamName.trim(),
                     memberCount: formData.memberCount
                 },
                 contact: {
-                    phone: formData.phone
+                    phone: formData.phone.replace(/[\s-]/g, '') // Remove spaces and dashes
                 },
-                driveFolderUrl: formData.driveFolderUrl || undefined
+                driveFolderUrl: formData.driveFolderUrl?.trim() || ''
             });
 
-            setSuccess(true);
+            setShowSuccessDialog(true);
+            setTimeout(() => {
+                setSuccess(true);
+            }, 1500);
         } catch (error: any) {
             console.error('Registration error:', error);
-            setError(error.message || 'Failed to register. Please try again.');
+            
+            // Provide more specific error messages
+            if (error.message?.includes('permission')) {
+                setError('Permission denied. Please make sure you are signed in and try again.');
+            } else if (error.message?.includes('already exists')) {
+                setError('You have already registered for this event. Please go back to edit your registration.');
+            } else {
+                setError(error.message || 'Failed to register. Please try again later.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -280,7 +315,8 @@ export default function BuildathonRegisterPage() {
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                                         <FolderOpen className="w-5 h-5" />
-                                        Project Submission (Optional)
+                                        Project Submission
+                                        <span className="text-sm font-normal text-white/60">(Optional)</span>
                                     </h3>
 
                                     <div>
@@ -292,7 +328,7 @@ export default function BuildathonRegisterPage() {
                                             name="driveFolderUrl"
                                             value={formData.driveFolderUrl}
                                             onChange={handleInputChange}
-                                            placeholder="https://drive.google.com/drive/folders/..."
+                                            placeholder="https://drive.google.com/drive/folders/... (optional)"
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
                                             disabled={isSubmitting}
                                         />
@@ -328,6 +364,15 @@ export default function BuildathonRegisterPage() {
                         </SpotlightCard>
                     </div>
                 </section>
+                
+                {/* Success Dialog */}
+                <Dialog
+                    isOpen={showSuccessDialog}
+                    onClose={() => setShowSuccessDialog(false)}
+                    title="Registration Successful!"
+                    message={isAlreadyRegistered ? "Your registration has been updated successfully." : "You have successfully registered for Build-A-Thon 2025!"}
+                    type="success"
+                />
             </main>
         </ProtectedRoute>
     );

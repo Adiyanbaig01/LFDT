@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo, memo } from "react";
 
 interface Particle {
     x: number;
@@ -14,18 +14,25 @@ interface Particle {
     pulseSpeed: number;
 }
 
-export default function BackgroundParticles() {
+// Pre-calculate constants
+const PARTICLE_COLOR_RGB = { r: 66, g: 153, b: 226 }; // #4299e2
+const GLOW_COLOR_RGB = { r: 49, g: 130, b: 206 }; // #3182ce
+const TWO_PI = Math.PI * 2;
+
+const BackgroundParticles = memo(function BackgroundParticles() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<Particle[]>([]);
     const animationIdRef = useRef<number | undefined>(undefined);
     const lastTimeRef = useRef<number>(0);
+    const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", { alpha: true });
         if (!ctx) return;
+        ctxRef.current = ctx;
 
         // Set canvas size
         const resizeCanvas = () => {
@@ -36,79 +43,96 @@ export default function BackgroundParticles() {
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
 
-        // Initialize particles
+        // Initialize particles with object pooling
         const initParticles = () => {
-            const particleCount = Math.floor(
-                (window.innerWidth * window.innerHeight) / 15000
-            ); // Responsive particle count
-            particlesRef.current = [];
+            const particleCount = Math.min(
+                Math.floor((window.innerWidth * window.innerHeight) / 15000),
+                100 // Cap at 100 particles for performance
+            );
+            
+            // Reuse existing particles array if possible
+            if (particlesRef.current.length !== particleCount) {
+                particlesRef.current = new Array(particleCount);
+            }
 
             for (let i = 0; i < particleCount; i++) {
-                particlesRef.current.push({
+                particlesRef.current[i] = {
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.3, // Very slow movement
+                    vx: (Math.random() - 0.5) * 0.3,
                     vy: (Math.random() - 0.5) * 0.3,
-                    size: Math.random() * 2 + 1, // Small particles (1-3px)
-                    baseOpacity: Math.random() * 0.3 + 0.1, // Base opacity 0.1-0.4
+                    size: Math.random() * 2 + 1,
+                    baseOpacity: Math.random() * 0.3 + 0.1,
                     opacity: 0,
-                    pulsePhase: Math.random() * Math.PI * 2,
-                    pulseSpeed: Math.random() * 0.5 + 0.3, // Slow pulse
-                });
+                    pulsePhase: Math.random() * TWO_PI,
+                    pulseSpeed: Math.random() * 0.5 + 0.3,
+                };
             }
         };
 
         initParticles();
 
-        // Animation loop with time-based updates (not frame dependent)
+        // Optimized animation loop with batched rendering
         const animate = (currentTime: number) => {
-            const deltaTime = currentTime - lastTimeRef.current;
+            const deltaTime = Math.min(currentTime - lastTimeRef.current, 33); // Cap at 33ms (30fps min)
             lastTimeRef.current = currentTime;
+            
+            const ctx = ctxRef.current;
+            if (!ctx) return;
 
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const deltaFactor = deltaTime / 16; // Normalize to ~60fps
+            const deltaPulse = deltaTime / 1000;
 
-            // Update and draw particles
-            particlesRef.current.forEach((particle) => {
-                // Update position (time-based, not frame-based)
-                particle.x += particle.vx * (deltaTime / 16); // Normalize to ~60fps equivalent
-                particle.y += particle.vy * (deltaTime / 16);
+            // Batch similar particles together
+            const particles = particlesRef.current;
+            const len = particles.length;
+            
+            for (let i = 0; i < len; i++) {
+                const particle = particles[i];
+                
+                // Update position
+                particle.x += particle.vx * deltaFactor;
+                particle.y += particle.vy * deltaFactor;
 
-                // Wrap around screen edges
+                // Wrap around screen edges (optimized)
                 if (particle.x < 0) particle.x = canvas.width;
-                if (particle.x > canvas.width) particle.x = 0;
+                else if (particle.x > canvas.width) particle.x = 0;
+                
                 if (particle.y < 0) particle.y = canvas.height;
-                if (particle.y > canvas.height) particle.y = 0;
+                else if (particle.y > canvas.height) particle.y = 0;
 
-                // Update opacity with subtle pulse
-                particle.pulsePhase += particle.pulseSpeed * (deltaTime / 1000);
-                const pulseMultiplier =
-                    0.7 + Math.sin(particle.pulsePhase) * 0.3; // Pulse between 0.4 and 1.0
+                // Update opacity with pulse
+                particle.pulsePhase += particle.pulseSpeed * deltaPulse;
+                const pulseMultiplier = 0.7 + Math.sin(particle.pulsePhase) * 0.3;
                 particle.opacity = particle.baseOpacity * pulseMultiplier;
-
-                // Draw particle
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-
-                // Use theme colors similar to the cubes but more subtle
+            }
+            
+            // Draw all particles in batches
+            ctx.globalCompositeOperation = 'lighter'; // Additive blending for glow effect
+            
+            for (let i = 0; i < len; i++) {
+                const particle = particles[i];
                 const alpha = particle.opacity;
-                ctx.fillStyle = `rgba(66, 153, 226, ${alpha})`; // #4299e2 with variable alpha
+                
+                // Draw main particle
+                ctx.fillStyle = `rgba(${PARTICLE_COLOR_RGB.r}, ${PARTICLE_COLOR_RGB.g}, ${PARTICLE_COLOR_RGB.b}, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, TWO_PI);
                 ctx.fill();
-
-                // Add subtle glow for larger particles
+                
+                // Draw glow for larger particles
                 if (particle.size > 2) {
+                    ctx.fillStyle = `rgba(${GLOW_COLOR_RGB.r}, ${GLOW_COLOR_RGB.g}, ${GLOW_COLOR_RGB.b}, ${alpha * 0.3})`;
                     ctx.beginPath();
-                    ctx.arc(
-                        particle.x,
-                        particle.y,
-                        particle.size * 1.5,
-                        0,
-                        Math.PI * 2
-                    );
-                    ctx.fillStyle = `rgba(49, 130, 206, ${alpha * 0.3})`; // #3182ce with lower alpha
+                    ctx.arc(particle.x, particle.y, particle.size * 1.5, 0, TWO_PI);
                     ctx.fill();
                 }
-            });
+            }
+            
+            ctx.globalCompositeOperation = 'source-over'; // Reset blend mode
 
             animationIdRef.current = requestAnimationFrame(animate);
         };
@@ -134,4 +158,6 @@ export default function BackgroundParticles() {
             aria-hidden="true"
         />
     );
-}
+});
+
+export default BackgroundParticles;

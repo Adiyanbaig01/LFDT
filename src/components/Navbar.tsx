@@ -3,9 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LogIn, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
+
+const AuthButton = dynamic(() => import("@/components/auth/AuthButton"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center w-24 h-10">
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        </div>
+    ),
+});
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -71,18 +80,12 @@ export default function Navbar() {
                         </div>
                     </div>
 
-                    {/* Right area: Login link on events pages or Right logo on other pages */}
+                    {/* Right area: Auth button on events pages or Right logo on other pages */}
                     <div className="flex justify-end items-center gap-3 md:gap-4">
                         {isEventsPage ? (
-                            /* Login Link for events pages */
+                            /* Auth Button for events pages */
                             <div className="flex-shrink-0">
-                                <Link
-                                    href="/auth/login"
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-6 py-3 text-base font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body"
-                                >
-                                    <LogIn className="w-5 h-5" />
-                                    Sign In
-                                </Link>
+                                <AuthButton />
                             </div>
                         ) : (
                             /* Right Logo (hidden on mobile, visible on md+) for other pages */
