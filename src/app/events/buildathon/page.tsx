@@ -47,7 +47,10 @@ export default function BuildathonPage() {
 
     const handleRegistration = async () => {
         if (!user) {
-            alert("Please sign in to register for this event.");
+            // Redirect to login page with return URL
+            window.location.href = `/auth/login?returnUrl=${encodeURIComponent(
+                "/events/buildathon/register"
+            )}`;
             return;
         }
 
@@ -97,35 +100,48 @@ export default function BuildathonPage() {
                             Checking Registration...
                         </div>
                     ) : isRegistered ? (
-                        <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
-                            <CheckCircle className="w-5 h-5" />
-                            Already Registered
+                        <div className="flex flex-col sm:flex-row gap-3 items-center">
+                            <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
+                                <CheckCircle className="w-5 h-5" />
+                                Already Registered
+                            </div>
+                            <button
+                                onClick={() =>
+                                    (window.location.href =
+                                        "/events/buildathon/edit")
+                                }
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-6 py-3 text-base font-medium text-white hover:bg-white/20 transition-all duration-200 font-body"
+                            >
+                                Edit Registration
+                            </button>
                         </div>
                     ) : user ? (
-                        <button
-                            onClick={handleRegistration}
-                            disabled={isRegistering}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isRegistering ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            ) : (
+                        <div className="flex justify-center">
+                            <button
+                                onClick={() =>
+                                    (window.location.href =
+                                        "/events/buildathon/register")
+                                }
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body"
+                            >
                                 <UserPlus className="w-5 h-5" />
-                            )}
-                            {isRegistering ? "Registering..." : "Register Now"}
-                        </button>
+                                Register Now
+                            </button>
+                        </div>
                     ) : (
-                        <button
-                            onClick={() =>
-                                alert(
-                                    "Please sign in using the button in the navigation bar to register for this event."
-                                )
-                            }
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/20 transition-all duration-200 font-body cursor-pointer"
-                        >
-                            <UserPlus className="w-5 h-5" />
-                            Sign In to Register
-                        </button>
+                        <div className="text-center">
+                            <button
+                                onClick={handleRegistration}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body mb-4"
+                            >
+                                <UserPlus className="w-5 h-5" />
+                                Sign In to Register
+                            </button>
+                            <p className="text-white/60 text-sm mb-4">
+                                Sign in with your Google or GitHub account to
+                                register
+                            </p>
+                        </div>
                     )}
                 </div>
             </HeroSection>

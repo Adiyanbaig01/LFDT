@@ -1,5 +1,8 @@
 import {
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
   signOut,
   GoogleAuthProvider,
   GithubAuthProvider,
@@ -32,6 +35,20 @@ export interface UserData {
   createdAt?: any;
   lastLogin?: any;
   events?: string[];
+  role: 'member' | 'admin';
+  profile: {
+    phone?: string;
+    gender?: string;
+    country?: string;
+    department?: string;
+    courseStream?: string;
+    specialization?: string;
+    workExperience?: string;
+    program?: string;
+    yearOfGraduation?: number;
+    organizationName?: string;
+  };
+  profileComplete: boolean;
 }
 
 // Sign in with Google
@@ -40,8 +57,11 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
     const result = await signInWithPopup(auth, googleProvider);
     await createOrUpdateUser(result.user, 'google');
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error signing in with Google:', error);
+    if (error.code === 'auth/account-exists-with-different-credential') {
+      throw new Error('An account already exists with the same email address but different sign-in credentials. Please sign in using the original provider.');
+    }
     throw error;
   }
 };
@@ -52,8 +72,59 @@ export const signInWithGitHub = async (): Promise<UserCredential> => {
     const result = await signInWithPopup(auth, githubProvider);
     await createOrUpdateUser(result.user, 'github');
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error signing in with GitHub:', error);
+    if (error.code === 'auth/account-exists-with-different-credential') {
+      throw new Error('An account already exists with the same email address but different sign-in credentials. Please sign in using the original provider.');
+    }
+    throw error;
+  }
+};
+
+// Sign in with email and password
+export const signInWithEmail = async (email: string, password: string): Promise<UserCredential> => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    await createOrUpdateUser(result.user, 'email');
+    return result;
+  } catch (error: any) {
+    console.error('Error signing in with email:', error);
+    if (error.code === 'auth/user-not-found') {
+      throw new Error('No account found with this email address.');
+    }
+    if (error.code === 'auth/wrong-password') {
+      throw new Error('Incorrect password.');
+    }
+    if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address.');
+    }
+    throw error;
+  }
+};
+
+// Create account with email and password
+export const createAccountWithEmail = async (email: string, password: string, displayName: string): Promise<UserCredential> => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Update the user's display name
+    await updateProfile(result.user, {
+      displayName: displayName
+    });
+    
+    await createOrUpdateUser(result.user, 'email');
+    return result;
+  } catch (error: any) {
+    console.error('Error creating account with email:', error);
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('An account already exists with this email address.');
+    }
+    if (error.code === 'auth/weak-password') {
+      throw new Error('Password should be at least 6 characters.');
+    }
+    if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address.');
+    }
     throw error;
   }
 };
@@ -82,12 +153,15 @@ export const createOrUpdateUser = async (user: User, provider: string): Promise<
     photoURL: user.photoURL,
     provider,
     lastLogin: serverTimestamp(),
+    events: [],
+    role: 'member',
+    profile: {},
+    profileComplete: false,
   };
 
   if (!userSnap.exists()) {
     // Create new user document
     userData.createdAt = serverTimestamp();
-    userData.events = [];
     await setDoc(userRef, userData);
   } else {
     // Update existing user's last login
@@ -138,10 +212,98 @@ export const registerForEvent = async (uid: string, eventId: string): Promise<vo
 // Check if user is registered for an event
 export const isRegisteredForEvent = async (uid: string, eventId: string): Promise<boolean> => {
   try {
-    const userData = await getUserData(uid);
-    return userData?.events?.includes(eventId) || false;
+    const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
+    const registrationSnap = await getDoc(registrationRef);
+    return registrationSnap.exists();
   } catch (error) {
     console.error('Error checking event registration:', error);
     return false;
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (uid: string, profileData: Partial<UserData['profile']>): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      profile: profileData,
+      profileComplete: Object.keys(profileData).length >= 5, // Consider profile complete if 5+ fields filled
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+// Event Registration Interface
+export interface EventRegistration {
+  eventId: string;
+  userId: string;
+  userEmail: string;
+  team: {
+    teamName: string;
+    memberCount: number;
+    members?: string[];
+  };
+  contact: {
+    phone: string;
+  };
+  driveFolderUrl?: string;
+  status: 'registered' | 'submitted' | 'withdrawn';
+  createdAt: any;
+  updatedAt: any;
+}
+
+// Create event registration
+export const createEventRegistration = async (uid: string, userEmail: string, eventId: string, registrationData: Partial<EventRegistration>): Promise<void> => {
+  try {
+    const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
+    
+    const registration: EventRegistration = {
+      eventId,
+      userId: uid,
+      userEmail,
+      team: registrationData.team || { teamName: '', memberCount: 1 },
+      contact: registrationData.contact || { phone: '' },
+      driveFolderUrl: registrationData.driveFolderUrl,
+      status: 'registered',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    
+    await setDoc(registrationRef, registration);
+  } catch (error) {
+    console.error('Error creating event registration:', error);
+    throw error;
+  }
+};
+
+// Update event registration
+export const updateEventRegistration = async (uid: string, eventId: string, updateData: Partial<EventRegistration>): Promise<void> => {
+  try {
+    const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
+    await updateDoc(registrationRef, {
+      ...updateData,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating event registration:', error);
+    throw error;
+  }
+};
+
+// Get event registration
+export const getEventRegistration = async (uid: string, eventId: string): Promise<EventRegistration | null> => {
+  try {
+    const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
+    const registrationSnap = await getDoc(registrationRef);
+    
+    if (registrationSnap.exists()) {
+      return registrationSnap.data() as EventRegistration;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting event registration:', error);
+    return null;
   }
 };

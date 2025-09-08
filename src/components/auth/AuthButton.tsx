@@ -2,22 +2,27 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { LogIn, LogOut, User, Github } from 'lucide-react';
+import { LogIn, LogOut, User, Github, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const AuthButton: React.FC = () => {
   const { user, loading, signInWithGoogle, signInWithGitHub, signOut } = useAuth();
+  const router = useRouter();
   const [showSignInOptions, setShowSignInOptions] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsSigningIn(true);
+      setError(null);
       await signInWithGoogle();
       setShowSignInOptions(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign-in error:', error);
+      setError(error.message || 'Failed to sign in with Google');
     } finally {
       setIsSigningIn(false);
     }
@@ -26,10 +31,12 @@ const AuthButton: React.FC = () => {
   const handleGitHubSignIn = async () => {
     try {
       setIsSigningIn(true);
+      setError(null);
       await signInWithGitHub();
       setShowSignInOptions(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign-in error:', error);
+      setError(error.message || 'Failed to sign in with GitHub');
     } finally {
       setIsSigningIn(false);
     }
@@ -39,6 +46,8 @@ const AuthButton: React.FC = () => {
     try {
       await signOut();
       setShowUserMenu(false);
+      // Refresh the page to update UI state
+      router.refresh();
     } catch (error) {
       console.error('Sign-out error:', error);
     }
@@ -119,6 +128,16 @@ const AuthButton: React.FC = () => {
         )}
         Sign In
       </button>
+
+      {/* Error Message */}
+      {error && (
+        <div className="absolute right-0 top-full mt-2 w-72 bg-red-900/20 border border-red-500/50 rounded-lg p-3 z-50">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-300">{error}</p>
+          </div>
+        </div>
+      )}
 
       {/* Sign In Options Dropdown */}
       {showSignInOptions && !isSigningIn && (
