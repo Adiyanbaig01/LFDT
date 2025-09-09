@@ -44,6 +44,14 @@ service cloud.firestore {
       allow delete: if false;
     }
     
+    // Shortlisted teams collection
+    match /shortlistedTeams/{documentId} {
+      // Public read access for shortlisted teams page
+      allow read: if true;
+      // Only admin operations can write (handled server-side)
+      allow write: if false;
+    }
+    
     // Events collection (if you add this later)
     match /events/{eventId} {
       // Public read access for events

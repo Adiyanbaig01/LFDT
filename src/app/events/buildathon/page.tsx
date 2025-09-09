@@ -16,12 +16,16 @@ import HeroSection from "@/components/HeroSection";
 import SectionBackground from "@/components/ui/SectionBackground";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import { useAuth } from "@/contexts/AuthContext";
+import WaitingPage from "@/components/WaitingPage";
 
 export default function BuildathonPage() {
-    const { user, registerForEvent, isRegisteredForEvent } = useAuth();
+    const { user, registerForEvent, isRegisteredForEvent, getEventRegistration } = useAuth();
     const [isRegistered, setIsRegistered] = useState(false);
     const [, setIsRegistering] = useState(false);
     const [checkingRegistration, setCheckingRegistration] = useState(true);
+    const [isShortlisted, setIsShortlisted] = useState(false);
+    const [teamName, setTeamName] = useState("");
+    const [showWaitingPage, setShowWaitingPage] = useState(false);
 
     const eventId = "buildathon-2025";
 
@@ -31,6 +35,32 @@ export default function BuildathonPage() {
                 try {
                     const registered = await isRegisteredForEvent(eventId);
                     setIsRegistered(registered);
+                    
+                    if (registered) {
+                        // Get registration details
+                        const registration = await getEventRegistration(eventId);
+                        if (registration) {
+                            setTeamName(registration.team.teamName);
+                        }
+                        
+                        // Check if user is shortlisted
+                        const shortlistResponse = await fetch(`/api/check-shortlisted?userId=${user.uid}`);
+                        if (shortlistResponse.ok) {
+                            const { isShortlisted } = await shortlistResponse.json();
+                            setIsShortlisted(isShortlisted);
+                            
+                            // Show waiting page during hackathon period if shortlisted
+                            const now = new Date();
+                            const hackathonStart = new Date('2025-09-12T00:00:00');
+                            const hackathonEnd = new Date('2025-09-16T00:00:00');
+                            
+                            setShowWaitingPage(
+                                isShortlisted && 
+                                now >= hackathonStart && 
+                                now <= hackathonEnd
+                            );
+                        }
+                    }
                 } catch (error) {
                     console.error("Error checking registration:", error);
                 } finally {
@@ -42,7 +72,17 @@ export default function BuildathonPage() {
         };
 
         checkRegistration();
-    }, [user, isRegisteredForEvent]);
+    }, [user, isRegisteredForEvent, getEventRegistration]);
+
+    // Show waiting page for shortlisted users during hackathon period
+    if (showWaitingPage && user) {
+        return (
+            <WaitingPage 
+                teamName={teamName} 
+                userName={user.displayName || user.email || "Participant"} 
+            />
+        );
+    }
 
     const handleRegistration = async () => {
         if (!user) {
