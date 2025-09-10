@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo, memo } from "react";
+import { useEffect, useRef, memo } from "react";
 
 interface Particle {
     x: number;

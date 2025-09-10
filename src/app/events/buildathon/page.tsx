@@ -13,19 +13,18 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import HeroSection from "@/components/HeroSection";
-import SectionBackground from "@/components/ui/SectionBackground";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import { useAuth } from "@/contexts/AuthContext";
 import WaitingPage from "@/components/WaitingPage";
 
 export default function BuildathonPage() {
-    const { user, registerForEvent, isRegisteredForEvent, getEventRegistration } = useAuth();
+    const { user, isRegisteredForEvent, getEventRegistration } = useAuth();
     const [isRegistered, setIsRegistered] = useState(false);
-    const [, setIsRegistering] = useState(false);
     const [checkingRegistration, setCheckingRegistration] = useState(true);
-    const [isShortlisted, setIsShortlisted] = useState(false);
+    const [, setIsShortlisted] = useState(false);
     const [teamName, setTeamName] = useState("");
     const [showWaitingPage, setShowWaitingPage] = useState(false);
+    const [registrationStatus, setRegistrationStatus] = useState<"registered" | "submitted" | "withdrawn" | null>(null);
 
     const eventId = "buildathon-2025";
 
@@ -41,6 +40,9 @@ export default function BuildathonPage() {
                         const registration = await getEventRegistration(eventId);
                         if (registration) {
                             setTeamName(registration.team.teamName);
+                            if (registration.status) {
+                                setRegistrationStatus(registration.status);
+                            }
                         }
                         
                         // Check if user is shortlisted
@@ -84,27 +86,7 @@ export default function BuildathonPage() {
         );
     }
 
-    const handleRegistration = async () => {
-        if (!user) {
-            // Redirect to login page with return URL
-            window.location.href = `/auth/login?returnUrl=${encodeURIComponent(
-                "/events/buildathon/register"
-            )}`;
-            return;
-        }
-
-        try {
-            setIsRegistering(true);
-            await registerForEvent(eventId);
-            setIsRegistered(true);
-            alert("Successfully registered for Build-A-Thon 2025!");
-        } catch (error) {
-            console.error("Registration error:", error);
-            alert("Failed to register for the event. Please try again.");
-        } finally {
-            setIsRegistering(false);
-        }
-    };
+    // Remove handleRegistration function as we no longer redirect to auth pages
 
     return (
         <main className="min-h-screen bg-[#0a0e13] text-white">
@@ -137,26 +119,23 @@ export default function BuildathonPage() {
                             </div>
                         </div>
                     ) : isRegistered ? (
-                        <div className="grid grid-cols-3 max-w-4xl mx-auto items-center">
-                            <div></div>
+                        registrationStatus === 'submitted' ? (
                             <div className="flex justify-center">
                                 <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
                                     <CheckCircle className="w-5 h-5" />
-                                    Already Registered
+                                    Project Submitted
                                 </div>
                             </div>
-                            <div className="flex ml-4">
+                        ) : (
+                            <div className="flex justify-center">
                                 <button
-                                    onClick={() =>
-                                        (window.location.href =
-                                            "/events/buildathon/edit")
-                                    }
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-6 py-3 text-base font-medium text-white hover:bg-white/20 transition-all duration-200 font-body"
+                                    onClick={() => (window.location.href = "/events/buildathon/submit")}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body"
                                 >
-                                    Edit Registration
+                                    Submit Project
                                 </button>
                             </div>
-                        </div>
+                        )
                     ) : user ? (
                         <div className="flex justify-center">
                             <button
@@ -173,16 +152,12 @@ export default function BuildathonPage() {
                     ) : (
                         <div className="flex justify-center">
                             <div className="text-center">
-                                <button
-                                    onClick={handleRegistration}
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body mb-4"
-                                >
+                                <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-8 py-4 text-lg font-medium text-white/70 mb-4">
                                     <UserPlus className="w-5 h-5" />
-                                    Sign In to Register
-                                </button>
+                                    Please sign in to register
+                                </div>
                                 <p className="text-white/60 text-sm mb-4">
-                                    Sign in with your Google or GitHub account
-                                    to register
+                                    Use the Sign In button in the navbar to register
                                 </p>
                             </div>
                         </div>

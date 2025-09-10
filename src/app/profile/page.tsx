@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { User, Phone, Building, GraduationCap, MapPin, Calendar, Briefcase, Edit, CheckCircle, AlertCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function ProfilePage() {
     const { user, userData, updateProfile, refreshUserData, signOut } = useAuth();
-    const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);

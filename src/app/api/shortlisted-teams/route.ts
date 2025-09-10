@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getShortlistedTeams } from '@/lib/firebase/admin';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const teams = await getShortlistedTeams();
     return NextResponse.json(teams);

@@ -19,7 +19,7 @@ const InteractiveBackground = lazy(() => import("@/components/InteractiveBackgro
 const LoadingScreen = lazy(() => import("@/components/LoadingScreen"));
 
 export default function Home() {
-    const { showLoading, isLoadingComplete, handleLoadingComplete } =
+    const { showLoading, handleLoadingComplete } =
         useLoadingScreen();
 
     return (

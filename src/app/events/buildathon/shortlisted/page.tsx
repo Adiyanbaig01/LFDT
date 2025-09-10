@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, Phone, Calendar, Star, Loader2, Trophy, CheckCircle } from "lucide-react";
+import { Users, Calendar, Star, Loader2, Trophy, CheckCircle } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import SectionBackground from "@/components/ui/SectionBackground";
@@ -193,7 +193,7 @@ export default function ShortlistedTeamsPage() {
                             <div className="mt-16 text-center">
                                 <SpotlightCard className="p-8 max-w-4xl mx-auto">
                                     <h3 className="text-2xl font-bold text-white mb-4">
-                                        What's Next?
+                                        What&apos;s Next?
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
                                         <div className="space-y-2">

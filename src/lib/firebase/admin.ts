@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, setDoc, deleteDoc, updateDoc, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from './config';
 import { EventRegistration } from './auth';
 
@@ -27,6 +27,7 @@ export interface ShortlistedTeam {
 // Get all buildathon registrations with user data
 export async function getAllBuildathonRegistrations(): Promise<TeamWithUser[]> {
   try {
+    console.log('[FIREBASE] Getting buildathon registrations...');
     const eventId = 'buildathon-2025';
     
     // Get all event registrations for buildathon
@@ -34,7 +35,9 @@ export async function getAllBuildathonRegistrations(): Promise<TeamWithUser[]> {
       collection(db, 'eventRegistrations'),
       where('eventId', '==', eventId)
     );
+    console.log('[FIREBASE] Executing registrations query...');
     const registrationsSnapshot = await getDocs(registrationsQuery);
+    console.log(`[FIREBASE] Found ${registrationsSnapshot.docs.length} registrations`);
     
     // Get shortlisted teams
     const shortlistedQuery = query(
@@ -52,28 +55,17 @@ export async function getAllBuildathonRegistrations(): Promise<TeamWithUser[]> {
     for (const docSnapshot of registrationsSnapshot.docs) {
       const registration = docSnapshot.data() as EventRegistration;
       
-      // Get user data
-      const userDocRef = doc(db, 'users', registration.userId);
-      const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', registration.userId)));
-      
-      let userData = null;
-      if (!userDoc.empty) {
-        userData = userDoc.docs[0].data();
-      }
-      
-      if (userData) {
-        teams.push({
-          registration,
-          userData: {
-            uid: userData.uid,
-            email: userData.email,
-            displayName: userData.displayName,
-            photoURL: userData.photoURL,
-            createdAt: userData.createdAt,
-          },
-          isShortlisted: shortlistedUserIds.has(registration.userId),
-        });
-      }
+      teams.push({
+        registration,
+        userData: {
+          uid: registration.userId,
+          email: registration.userEmail || null,
+          displayName: registration.userDisplayName || null,
+          photoURL: null,
+          createdAt: registration.createdAt || null,
+        },
+        isShortlisted: shortlistedUserIds.has(registration.userId),
+      });
     }
     
     return teams.sort((a, b) => {
@@ -94,12 +86,10 @@ export async function shortlistTeam(userId: string, adminEmail: string): Promise
     const registrationId = `${eventId}_${userId}`;
     
     // Get the registration data
-    const registrationDoc = await adminDb
-      .collection('eventRegistrations')
-      .doc(registrationId)
-      .get();
+    const registrationDocRef = doc(db, 'eventRegistrations', registrationId);
+    const registrationDoc = await getDoc(registrationDocRef);
     
-    if (!registrationDoc.exists) {
+    if (!registrationDoc.exists()) {
       throw new Error('Registration not found');
     }
     
@@ -111,25 +101,14 @@ export async function shortlistTeam(userId: string, adminEmail: string): Promise
       userId,
       userEmail: registration.userEmail,
       teamName: registration.team.teamName,
-      shortlistedAt: new Date() as any,
+      shortlistedAt: Timestamp.now(),
       shortlistedBy: adminEmail,
       registrationId,
     };
     
     const shortlistedId = `${eventId}_${userId}`;
-    await adminDb
-      .collection('shortlistedTeams')
-      .doc(shortlistedId)
-      .set(shortlistedData);
-    
-    // Update user profile to indicate shortlisted status
-    await adminDb
-      .collection('users')
-      .doc(userId)
-      .update({
-        shortlistedForBuildathon: true,
-        shortlistedAt: new Date(),
-      });
+    const shortlistedDocRef = doc(db, 'shortlistedTeams', shortlistedId);
+    await setDoc(shortlistedDocRef, shortlistedData);
       
   } catch (error) {
     console.error('Error shortlisting team:', error);
@@ -144,19 +123,8 @@ export async function removeFromShortlist(userId: string): Promise<void> {
     const shortlistedId = `${eventId}_${userId}`;
     
     // Remove from shortlisted teams
-    await adminDb
-      .collection('shortlistedTeams')
-      .doc(shortlistedId)
-      .delete();
-    
-    // Update user profile
-    await adminDb
-      .collection('users')
-      .doc(userId)
-      .update({
-        shortlistedForBuildathon: false,
-        shortlistedAt: null,
-      });
+    const shortlistedDocRef = doc(db, 'shortlistedTeams', shortlistedId);
+    await deleteDoc(shortlistedDocRef);
       
   } catch (error) {
     console.error('Error removing from shortlist:', error);
@@ -169,41 +137,39 @@ export async function getShortlistedTeams(): Promise<TeamWithUser[]> {
   try {
     const eventId = 'buildathon-2025';
     
-    const shortlistedSnapshot = await adminDb
-      .collection('shortlistedTeams')
-      .where('eventId', '==', eventId)
-      .orderBy('shortlistedAt', 'desc')
-      .get();
+    const shortlistedQuery = query(
+      collection(db, 'shortlistedTeams'),
+      where('eventId', '==', eventId)
+    );
+    const shortlistedSnapshot = await getDocs(shortlistedQuery);
+
+    // Sort in-memory to avoid requiring a composite index
+    const shortlistedDocs = [...shortlistedSnapshot.docs].sort((a, b) => {
+      const ad = (a.data() as any).shortlistedAt?.toMillis?.() ?? 0;
+      const bd = (b.data() as any).shortlistedAt?.toMillis?.() ?? 0;
+      return bd - ad; // desc
+    });
     
     const teams: TeamWithUser[] = [];
     
-    for (const doc of shortlistedSnapshot.docs) {
-      const shortlistedData = doc.data() as ShortlistedTeam;
+    for (const docSnapshot of shortlistedDocs) {
+      const shortlistedData = docSnapshot.data() as ShortlistedTeam;
       
       // Get the original registration
-      const registrationDoc = await adminDb
-        .collection('eventRegistrations')
-        .doc(shortlistedData.registrationId)
-        .get();
+      const registrationDocRef = doc(db, 'eventRegistrations', shortlistedData.registrationId);
+      const registrationDoc = await getDoc(registrationDocRef);
       
-      // Get user data
-      const userDoc = await adminDb
-        .collection('users')
-        .doc(shortlistedData.userId)
-        .get();
-      
-      if (registrationDoc.exists && userDoc.exists) {
+      if (registrationDoc.exists()) {
         const registration = registrationDoc.data() as EventRegistration;
-        const userData = userDoc.data();
         
         teams.push({
           registration,
           userData: {
-            uid: userData!.uid,
-            email: userData!.email,
-            displayName: userData!.displayName,
-            photoURL: userData!.photoURL,
-            createdAt: userData!.createdAt,
+            uid: shortlistedData.userId,
+            email: shortlistedData.userEmail || null,
+            displayName: registration.userDisplayName || null,
+            photoURL: null,
+            createdAt: registration.createdAt || null,
           },
           isShortlisted: true,
         });
@@ -223,12 +189,10 @@ export async function isUserShortlisted(userId: string): Promise<boolean> {
     const eventId = 'buildathon-2025';
     const shortlistedId = `${eventId}_${userId}`;
     
-    const doc = await adminDb
-      .collection('shortlistedTeams')
-      .doc(shortlistedId)
-      .get();
+    const shortlistedDocRef = doc(db, 'shortlistedTeams', shortlistedId);
+    const shortlistedDoc = await getDoc(shortlistedDocRef);
     
-    return doc.exists;
+    return shortlistedDoc.exists();
   } catch (error) {
     console.error('Error checking shortlisted status:', error);
     return false;

@@ -101,7 +101,7 @@ export default function WaitingPage({ teamName, userName }: WaitingPageProps) {
                             </h2>
                             <p className="text-lg text-white/80 mb-2">Team: <strong>{teamName}</strong></p>
                             <p className="text-white/60">
-                                You're all set for the Build-A-Thon 2025 main event!
+                                You&apos;re all set for the Build-A-Thon 2025 main event!
                             </p>
                         </div>
                     </SpotlightCard>

@@ -5,11 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LogIn, User, Github, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 
 const AuthButton: React.FC = () => {
   const { user, loading, signInWithGoogle, signInWithGitHub } = useAuth();
-  const router = useRouter();
   const [showSignInOptions, setShowSignInOptions] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);

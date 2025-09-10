@@ -42,6 +42,41 @@ interface TeamData {
     isShortlisted: boolean;
 }
 
+function formatFirestoreDate(d: any): string | null {
+    // Supports Firestore Timestamp, {seconds, nanoseconds}, string dates, or Date
+    if (!d) return null;
+    
+    let date: Date;
+    
+    // If it's a Timestamp-like
+    if (typeof d?.toDate === 'function') {
+        try { date = d.toDate(); } catch { return null; }
+    }
+    // If it's the wire format {seconds, nanoseconds}
+    else if (typeof d?.seconds === 'number') {
+        date = new Date(d.seconds * 1000);
+    }
+    // If it's already a JS Date
+    else if (d instanceof Date) {
+        date = d;
+    }
+    // If it came as an ISO/string
+    else if (typeof d === 'string') {
+        date = new Date(d);
+        if (isNaN(date.getTime())) return null;
+    }
+    else {
+        return null;
+    }
+    
+    // Format as DD/MM/YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+}
+
 export default function AdminDashboard() {
     const router = useRouter();
     const [teams, setTeams] = useState<TeamData[]>([]);
@@ -283,7 +318,7 @@ export default function AdminDashboard() {
                                 
                                 <div className="flex items-center gap-2 text-sm text-white/70">
                                     <Calendar className="w-4 h-4" />
-                                    {team.registration.createdAt?.toDate?.()?.toLocaleDateString() || "N/A"}
+                                    {formatFirestoreDate(team.registration.createdAt) || "—"}
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -300,29 +335,53 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Actions */}
-                            <button
-                                onClick={() => handleShortlist(team.registration.userId, team.isShortlisted)}
-                                disabled={actionLoading === team.registration.userId}
-                                className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                                    team.isShortlisted
-                                        ? "bg-red-600/20 border border-red-600/50 text-red-300 hover:bg-red-600/30"
-                                        : "bg-green-600/20 border border-green-600/50 text-green-300 hover:bg-green-600/30"
-                                }`}
-                            >
-                                {actionLoading === team.registration.userId ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : team.isShortlisted ? (
-                                    <>
-                                        <XCircle className="w-4 h-4" />
-                                        Remove from Shortlist
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle className="w-4 h-4" />
-                                        Add to Shortlist
-                                    </>
-                                )}
-                            </button>
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* View Drive */}
+                                <a
+                                    href={team.registration.driveFolderUrl || '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors border ${
+                                        team.registration.driveFolderUrl
+                                            ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                                            : 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed'
+                                    }`}
+                                    onClick={(e) => {
+                                        if (!team.registration.driveFolderUrl) e.preventDefault();
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                        <path d="M10.5 3.75a.75.75 0 0 1 .75-.75h7.5A.75.75 0 0 1 19.5 3v7.5a.75.75 0 0 1-1.5 0V4.81l-6.72 6.72a.75.75 0 1 1-1.06-1.06L16.94 3.75H11.25a.75.75 0 0 1-.75-.75Z"/>
+                                        <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h5.25a.75.75 0 0 1 0 1.5H5.25c-.414 0-.75.336-.75.75v12a.75.75 0 0 0 .75.75h12a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 1 1.5 0v5.25A2.25 2.25 0 0 1 17.25 21H5.25A2.25 2.25 0 0 1 3 18.75v-12Z"/>
+                                    </svg>
+                                    {team.registration.driveFolderUrl ? 'View Drive' : 'No Drive Link'}
+                                </a>
+
+                                {/* Shortlist toggle */}
+                                <button
+                                    onClick={() => handleShortlist(team.registration.userId, team.isShortlisted)}
+                                    disabled={actionLoading === team.registration.userId}
+                                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                                        team.isShortlisted
+                                            ? 'bg-red-600/20 border border-red-600/50 text-red-300 hover:bg-red-600/30'
+                                            : 'bg-green-600/20 border border-green-600/50 text-green-300 hover:bg-green-600/30'
+                                    }`}
+                                >
+                                    {actionLoading === team.registration.userId ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : team.isShortlisted ? (
+                                        <>
+                                            <XCircle className="w-4 h-4" />
+                                            Remove
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle className="w-4 h-4" />
+                                            Add to Shortlist
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>

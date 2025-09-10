@@ -208,6 +208,7 @@ export interface EventRegistration {
   eventId: string;
   userId: string;
   userEmail: string;
+  userDisplayName?: string; // cached leader name for admin display/export
   team: {
     teamName: string;
     memberCount: number;
@@ -233,10 +234,21 @@ export const createEventRegistration = async (uid: string, userEmail: string, ev
       throw new Error('You have already registered for this event.');
     }
     
+    // Try to pick a good display name for caching
+    let leaderName: string | undefined = undefined;
+    try {
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        leaderName = (userDoc.data() as any).displayName || undefined;
+      }
+    } catch {}
+
     const registration: EventRegistration = {
       eventId,
       userId: uid,
       userEmail,
+      userDisplayName: leaderName,
       team: registrationData.team || { teamName: '', memberCount: 1 },
       contact: registrationData.contact || { phone: '' },
       driveFolderUrl: registrationData.driveFolderUrl || '', // Ensure it's not undefined

@@ -124,7 +124,7 @@ export default function Contact() {
                 subject: "General Inquiry",
                 message: "",
             });
-        } catch (error) {
+        } catch {
             setSubmitError(
                 "Something went wrong while sending your message. Please try again."
             );

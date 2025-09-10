@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { getAllBuildathonRegistrations } from '@/lib/firebase/admin';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
+    console.log('[ADMIN API] Fetching teams - verifying admin auth...');
     // Verify admin authentication
     await requireAdminAuth();
+    console.log('[ADMIN API] Admin auth verified, fetching teams...');
 
     const teams = await getAllBuildathonRegistrations();
+    console.log(`[ADMIN API] Found ${teams.length} teams`);
     
     return NextResponse.json(teams);
   } catch (error) {
