@@ -110,6 +110,24 @@ html {
     scroll-behavior: auto;
 }
 
+/* Fix dropdown options styling for dark theme */
+select {
+    background-color: rgb(15 20 25 / 0.95) !important; /* Dark background for select */
+    color: white !important;
+}
+
+select option {
+    background-color: rgb(15 20 25) !important; /* Dark background for options */
+    color: white !important;
+    padding: 8px 12px;
+}
+
+select option:checked,
+select option:hover {
+    background-color: rgb(49 130 206 / 0.2) !important; /* Blue tint for selected/hover */
+    color: white !important;
+}
+
 /* Custom utilities for fonts */
 .font-heading {
     font-family: var(--font-heading);

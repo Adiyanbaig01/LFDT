@@ -10,6 +10,9 @@ import {
     BookOpenCheck,
     CheckCircle,
     UserPlus,
+    MessageCircle,
+    Eye,
+    Youtube,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import HeroSection from "@/components/HeroSection";
@@ -24,7 +27,9 @@ export default function BuildathonPage() {
     const [, setIsShortlisted] = useState(false);
     const [teamName, setTeamName] = useState("");
     const [showWaitingPage, setShowWaitingPage] = useState(false);
-    const [registrationStatus, setRegistrationStatus] = useState<"registered" | "submitted" | "withdrawn" | null>(null);
+    const [registrationStatus, setRegistrationStatus] = useState<
+        "registered" | "submitted" | "withdrawn" | null
+    >(null);
 
     const eventId = "buildathon-2025";
 
@@ -34,32 +39,41 @@ export default function BuildathonPage() {
                 try {
                     const registered = await isRegisteredForEvent(eventId);
                     setIsRegistered(registered);
-                    
+
                     if (registered) {
                         // Get registration details
-                        const registration = await getEventRegistration(eventId);
+                        const registration = await getEventRegistration(
+                            eventId
+                        );
                         if (registration) {
                             setTeamName(registration.team.teamName);
                             if (registration.status) {
                                 setRegistrationStatus(registration.status);
                             }
                         }
-                        
+
                         // Check if user is shortlisted
-                        const shortlistResponse = await fetch(`/api/check-shortlisted?userId=${user.uid}`);
+                        const shortlistResponse = await fetch(
+                            `/api/check-shortlisted?userId=${user.uid}`
+                        );
                         if (shortlistResponse.ok) {
-                            const { isShortlisted } = await shortlistResponse.json();
+                            const { isShortlisted } =
+                                await shortlistResponse.json();
                             setIsShortlisted(isShortlisted);
-                            
+
                             // Show waiting page during hackathon period if shortlisted
                             const now = new Date();
-                            const hackathonStart = new Date('2025-09-12T00:00:00');
-                            const hackathonEnd = new Date('2025-09-16T00:00:00');
-                            
+                            const hackathonStart = new Date(
+                                "2025-09-12T00:00:00"
+                            );
+                            const hackathonEnd = new Date(
+                                "2025-09-16T00:00:00"
+                            );
+
                             setShowWaitingPage(
-                                isShortlisted && 
-                                now >= hackathonStart && 
-                                now <= hackathonEnd
+                                isShortlisted &&
+                                    now >= hackathonStart &&
+                                    now <= hackathonEnd
                             );
                         }
                     }
@@ -79,9 +93,9 @@ export default function BuildathonPage() {
     // Show waiting page for shortlisted users during hackathon period
     if (showWaitingPage && user) {
         return (
-            <WaitingPage 
-                teamName={teamName} 
-                userName={user.displayName || user.email || "Participant"} 
+            <WaitingPage
+                teamName={teamName}
+                userName={user.displayName || user.email || "Participant"}
             />
         );
     }
@@ -119,34 +133,43 @@ export default function BuildathonPage() {
                             </div>
                         </div>
                     ) : isRegistered ? (
-                        registrationStatus === 'submitted' ? (
-                            <div className="flex justify-center">
-                                <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-8 py-4 text-lg font-medium text-white">
-                                    <CheckCircle className="w-5 h-5" />
-                                    Project Submitted
-                                </div>
+                        <div className="flex flex-row gap-3 justify-center">
+                            <button
+                                onClick={() =>
+                                    (window.location.href =
+                                        "/events/buildathon/shortlisted")
+                                }
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-6 py-3 text-base font-medium text-white hover:bg-white/20 transition-colors"
+                            >
+                                <Target className="w-4 h-4" />
+                                View Shortlisted
+                            </button>
+                            <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white">
+                                <CheckCircle className="w-4 h-4" />
+                                Project Submitted
                             </div>
-                        ) : (
-                            <div className="flex justify-center">
-                                <button
-                                    onClick={() => (window.location.href = "/events/buildathon/submit")}
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body"
-                                >
-                                    Submit Project
-                                </button>
-                            </div>
-                        )
+                            <button
+                                onClick={() =>
+                                    (window.location.href =
+                                        "/events/buildathon/phase-2")
+                                }
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-6 py-3 text-base font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                <BookOpenCheck className="w-4 h-4" />
+                                Go to Phase-2
+                            </button>
+                        </div>
                     ) : user ? (
                         <div className="flex justify-center">
                             <button
                                 onClick={() =>
                                     (window.location.href =
-                                        "/events/buildathon/register")
+                                        "/events/buildathon/submit")
                                 }
                                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#3182ce] to-[#4299e2] px-8 py-4 text-lg font-medium text-white hover:from-[#2c5aa0] hover:to-[#3182ce] transition-all duration-200 shadow-lg hover:shadow-xl font-body"
                             >
                                 <UserPlus className="w-5 h-5" />
-                                Register Now
+                                Submit Project
                             </button>
                         </div>
                     ) : (
@@ -154,16 +177,106 @@ export default function BuildathonPage() {
                             <div className="text-center">
                                 <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/20 px-8 py-4 text-lg font-medium text-white/70 mb-4">
                                     <UserPlus className="w-5 h-5" />
-                                    Please sign in to register
+                                    Please sign in to submit your project
                                 </div>
                                 <p className="text-white/60 text-sm mb-4">
-                                    Use the Sign In button in the navbar to register
+                                    Use the Sign In button in the navbar
                                 </p>
                             </div>
                         </div>
                     )}
                 </div>
             </HeroSection>
+
+            {/* Instructions Section - Only show after submission */}
+            {isRegistered && (
+                <section className="relative px-6 py-12 bg-[#0a0e13]/50">
+                    <div className="mx-auto max-w-4xl">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold text-white mb-4 font-heading">
+                                What You Need to Know
+                            </h2>
+                            <p className="text-white/70 max-w-2xl mx-auto">
+                                Stay connected and informed about the
+                                Build-A-Thon progress and upcoming
+                                presentations.
+                            </p>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <SpotlightCard className="p-6 flex flex-col">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <MessageCircle className="w-6 h-6 text-[#25D366]" />
+                                    <h3 className="text-lg font-semibold text-white">
+                                        Join WhatsApp Community
+                                    </h3>
+                                </div>
+                                <p className="text-white/70 text-sm mb-4 flex-grow">
+                                    Get real-time updates and coordinate with
+                                    other participants.
+                                </p>
+                                <button
+                                    onClick={() =>
+                                        window.open(
+                                            "https://chat.whatsapp.com/ECe5WdmWWYXJidNw2SXucj",
+                                            "_blank"
+                                        )
+                                    }
+                                    className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#25D366] text-[#25D366] rounded-lg text-sm font-medium hover:bg-[#25D366] hover:text-white transition-all duration-200 mt-auto"
+                                >
+                                    <MessageCircle className="w-4 h-4" />
+                                    Join WhatsApp Group
+                                </button>
+                            </SpotlightCard>
+
+                            <SpotlightCard className="p-6 flex flex-col">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Eye className="w-6 h-6 text-[#3182ce]" />
+                                    <h3 className="text-lg font-semibold text-white">
+                                        Check Shortlist Status
+                                    </h3>
+                                </div>
+                                <p className="text-white/70 text-sm mb-4 flex-grow">
+                                    Visit the shortlisted page to see if your
+                                    team made it to the next phase.
+                                </p>
+                                <button
+                                    onClick={() =>
+                                        (window.location.href =
+                                            "/events/buildathon/shortlisted")
+                                    }
+                                    className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#3182ce] text-[#3182ce] rounded-lg text-sm font-medium hover:bg-[#3182ce] hover:text-white transition-all duration-200 mt-auto"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                    Check Shortlist Status
+                                </button>
+                            </SpotlightCard>
+
+                            <SpotlightCard className="p-6 flex flex-col">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Youtube className="w-6 h-6 text-[#FF0000]" />
+                                    <h3 className="text-lg font-semibold text-white">
+                                        Live Presentations
+                                    </h3>
+                                </div>
+                                <p className="text-white/70 text-sm mb-4 flex-grow">
+                                    Shortlisted teams will present live. Watch
+                                    the presentations here.
+                                </p>
+                                <button
+                                    onClick={() =>
+                                        (window.location.href =
+                                            "/events/buildathon/phase-2")
+                                    }
+                                    className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#FF0000] text-[#FF0000] rounded-lg text-sm font-medium hover:bg-[#FF0000] hover:text-white transition-all duration-200 mt-auto"
+                                >
+                                    <Youtube className="w-4 h-4" />
+                                    Go to Phase-2
+                                </button>
+                            </SpotlightCard>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Event Details & Guidelines - Combined Section */}
             <section className="relative px-6 py-16 sm:py-20 bg-[#0a0e13] overflow-hidden">

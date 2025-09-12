@@ -1,8 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { CheckCircle, AlertCircle, ArrowLeft, FolderOpen } from "lucide-react";
+import {
+    CheckCircle,
+    AlertCircle,
+    ArrowLeft,
+    Users,
+    Phone,
+    FolderOpen,
+    MessageCircle,
+    Eye,
+    Youtube,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import HeroSection from "@/components/HeroSection";
@@ -11,85 +20,231 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Dialog from "@/components/ui/Dialog";
 
 export default function BuildathonSubmitPage() {
-    const router = useRouter();
-    const { user, updateEventRegistration, getEventRegistration, isRegisteredForEvent } = useAuth();
+    const { user, userData, createEventRegistration } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [success, setSuccess] = useState(false);
 
     const eventId = "buildathon-2025";
 
     const [formData, setFormData] = useState({
-        driveFolderUrl: '',
-        status: 'registered' as 'registered' | 'submitted' | 'withdrawn'
+        teamName: "",
+        memberCount: 1,
+        phone: userData?.profile?.phone || "",
+        driveFolderUrl: "",
     });
 
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
+    // Auto-fill phone number from user profile when userData changes
     useEffect(() => {
-        const loadData = async () => {
-            if (!user) { setLoading(false); return; }
-            try {
-                const registered = await isRegisteredForEvent(eventId);
-                if (!registered) {
-                    router.push('/events/buildathon/register');
-                    return;
-                }
-                const registration = await getEventRegistration(eventId);
-                if (registration) {
-                    setFormData({
-                        driveFolderUrl: registration.driveFolderUrl || '',
-                        status: (registration.status as any) || 'registered'
-                    });
-                }
-            } catch (e) {
-                console.error('Error loading data:', e);
-                setError('Failed to load your registration');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadData();
-    }, [user, isRegisteredForEvent, getEventRegistration, router]);
+        if (userData?.profile?.phone && !formData.phone) {
+            setFormData((prev) => ({
+                ...prev,
+                phone: userData.profile.phone || "",
+            }));
+        }
+    }, [userData, formData.phone]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name === "memberCount" ? parseInt(value) : value,
+        }));
     };
 
-    const handleSubmitProject = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.driveFolderUrl || !formData.driveFolderUrl.startsWith('http')) {
-            setError('Please provide a valid Google Drive folder URL before submitting');
+
+        // Validation
+        if (!formData.teamName || !formData.phone || !formData.driveFolderUrl) {
+            setError("Please fill in all required fields");
             return;
         }
+
+        // Validate team name
+        if (formData.teamName.trim().length < 2) {
+            setError("Team name must be at least 2 characters long");
+            return;
+        }
+
+        // Validate phone number (basic validation for 10 digits)
+        const phoneRegex = /^[0-9]{10,}$/;
+        if (!phoneRegex.test(formData.phone.replace(/[\s-]/g, ""))) {
+            setError("Please enter a valid phone number (at least 10 digits)");
+            return;
+        }
+
+        // Validate drive URL (required)
+        if (!formData.driveFolderUrl.startsWith("http")) {
+            setError("Please enter a valid URL for the Google Drive folder");
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             setError(null);
-            await updateEventRegistration(eventId, {
-                driveFolderUrl: formData.driveFolderUrl.trim(),
-                status: 'submitted'
+
+            await createEventRegistration(eventId, {
+                team: {
+                    teamName: formData.teamName.trim(),
+                    memberCount: formData.memberCount,
+                },
+                contact: {
+                    phone: formData.phone.replace(/[\s-]/g, ""), // Remove spaces and dashes
+                },
+                driveFolderUrl: formData.driveFolderUrl?.trim() || "",
             });
+
             setShowSuccessDialog(true);
-            // Redirect to main buildathon page after a short delay
-            setTimeout(() => {
-                router.push('/events/buildathon');
-            }, 2000);
         } catch (error: any) {
-            console.error('Submit project error:', error);
-            setError(error.message || 'Failed to submit project. Please try again.');
+            console.error("Registration error:", error);
+
+            // Provide more specific error messages
+            if (error.message?.includes("permission")) {
+                setError(
+                    "Permission denied. Please make sure you are signed in and try again."
+                );
+            } else if (error.message?.includes("already exists")) {
+                setError("You have already registered for this event.");
+            } else {
+                setError(
+                    error.message ||
+                        "Failed to register. Please try again later."
+                );
+            }
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (loading) {
+    if (success) {
         return (
-            <main className="min-h-screen bg-[#0a0e13] text-white flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-white/70">Loading...</p>
-                </div>
+            <main className="min-h-screen bg-[#0a0e13] text-white">
+                <HeroSection
+                    title="Registration Complete!"
+                    subtitle="You have successfully registered for Build-A-Thon 2025"
+                    height={500}
+                />
+                <section className="relative px-6 py-16">
+                    <div className="mx-auto max-w-5xl">
+                        <SpotlightCard className="p-8 lg:p-12">
+                            <div className="text-center mb-8">
+                                <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <CheckCircle className="w-10 h-10 text-white" />
+                                </div>
+                                <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+                                    Welcome to Build-A-Thon 2025!
+                                </h2>
+                                <p className="text-lg lg:text-xl text-white/70 mb-4 max-w-3xl mx-auto">
+                                    Your project has been successfully
+                                    submitted! Here&apos;s what happens next:
+                                </p>
+                                <p className="text-sm lg:text-base text-white/60 max-w-2xl mx-auto">
+                                    You will be notified if you&apos;re
+                                    shortlisted on WhatsApp community as well as
+                                    through email.
+                                </p>
+                            </div>
+
+                            <div className="grid md:grid-cols-3 gap-6 mb-8">
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <MessageCircle className="w-6 h-6 text-[#25D366]" />
+                                        <h3 className="text-lg font-semibold text-white">
+                                            Join WhatsApp Community
+                                        </h3>
+                                    </div>
+                                    <p className="text-white/70 text-sm mb-4">
+                                        Get real-time updates and coordinate
+                                        with other participants.
+                                    </p>
+                                    <button
+                                        onClick={() =>
+                                            window.open(
+                                                "https://chat.whatsapp.com/ECe5WdmWWYXJidNw2SXucj",
+                                                "_blank"
+                                            )
+                                        }
+                                        className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#25D366] text-[#25D366] rounded-lg text-sm font-medium hover:bg-[#25D366] hover:text-white transition-all duration-200"
+                                    >
+                                        <MessageCircle className="w-4 h-4" />
+                                        Join WhatsApp Group
+                                    </button>
+                                </div>
+
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <Eye className="w-6 h-6 text-[#3182ce]" />
+                                        <h3 className="text-lg font-semibold text-white">
+                                            Check Shortlist Status
+                                        </h3>
+                                    </div>
+                                    <p className="text-white/70 text-sm mb-4">
+                                        Visit the shortlisted page to see if
+                                        your team made it to the next phase.
+                                    </p>
+                                    <button
+                                        onClick={() =>
+                                            (window.location.href =
+                                                "/events/buildathon/shortlisted")
+                                        }
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        Check Shortlist Status
+                                    </button>
+                                </div>
+
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <Youtube className="w-6 h-6 text-[#FF0000]" />
+                                        <h3 className="text-lg font-semibold text-white">
+                                            Live Presentations
+                                        </h3>
+                                    </div>
+                                    <p className="text-white/70 text-sm mb-4">
+                                        Shortlisted teams will present live.
+                                        Watch the presentations here.
+                                    </p>
+                                    <button
+                                        onClick={() =>
+                                            (window.location.href =
+                                                "/events/buildathon/phase-2")
+                                        }
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors"
+                                    >
+                                        <Youtube className="w-4 h-4" />
+                                        Watch Live Presentations
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <button
+                                    onClick={() =>
+                                        (window.location.href =
+                                            "/events/buildathon")
+                                    }
+                                    className="px-8 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors"
+                                >
+                                    Back to Event Details
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        (window.location.href = "/profile")
+                                    }
+                                    className="px-8 py-3 bg-white/10 border border-white/20 text-white rounded-lg font-medium hover:bg-white/20 transition-colors"
+                                >
+                                    View Profile
+                                </button>
+                            </div>
+                        </SpotlightCard>
+                    </div>
+                </section>
             </main>
         );
     }
@@ -98,45 +253,162 @@ export default function BuildathonSubmitPage() {
         <ProtectedRoute>
             <main className="min-h-screen bg-[#0a0e13] text-white">
                 <HeroSection
-                    title="Submit Project"
-                    subtitle="Provide your Google Drive folder and submit your Build-A-Thon 2025 project"
+                    title="Submit Project for Build-A-Thon 2025"
+                    subtitle="Register your team and submit your project"
                     height={400}
                 />
 
                 <section className="relative px-6 py-16 sm:py-20">
                     <div className="mx-auto max-w-2xl">
                         <SpotlightCard className="p-8">
-                            {/* Status banner */}
-                            <div className="mb-6">
-                                {formData.status === 'submitted' ? (
-                                    <div className="p-4 bg-green-900/30 border border-green-500/50 rounded-lg text-green-300 flex items-center gap-2">
-                                        <CheckCircle className="w-5 h-5" /> Project already submitted
+                            {/* User Info */}
+                            {user && (
+                                <div className="mb-8 p-4 bg-white/5 border border-white/10 rounded-lg">
+                                    <h3 className="text-lg font-semibold text-white mb-2">
+                                        Registration Details
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="text-white/60">
+                                                Name:
+                                            </span>
+                                            <p className="text-white font-medium">
+                                                {user.displayName ||
+                                                    "Not provided"}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-white/60">
+                                                Email:
+                                            </span>
+                                            <p className="text-white font-medium">
+                                                {user.email}
+                                            </p>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <div className="p-4 bg-blue-900/30 border border-blue-500/50 rounded-lg text-blue-300">
-                                        You are registered. Submit your project below when ready.
-                                    </div>
-                                )}
-                            </div>
+                                    {!userData?.profileComplete && (
+                                        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-600/50 rounded-lg">
+                                            <p className="text-yellow-300 text-sm flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" />
+                                                Consider completing your profile
+                                                for better experience
+                                                <Link
+                                                    href="/profile"
+                                                    className="text-yellow-200 underline ml-1"
+                                                >
+                                                    Complete Profile
+                                                </Link>
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
+                            {/* Error Message */}
                             {error && (
                                 <div className="mb-6 bg-red-900/20 border border-red-500/50 rounded-lg p-4">
                                     <div className="flex items-start gap-2">
                                         <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                        <p className="text-sm text-red-300">{error}</p>
+                                        <p className="text-sm text-red-300">
+                                            {error}
+                                        </p>
                                     </div>
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmitProject} className="space-y-6">
+                            {/* Registration Form */}
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                        <Users className="w-5 h-5" />
+                                        Team Information
+                                    </h3>
+
+                                    <div>
+                                        <label className="block text-white/80 text-sm font-medium mb-2">
+                                            Team Name{" "}
+                                            <span className="text-red-400">
+                                                *
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="teamName"
+                                            value={formData.teamName}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter your team name"
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
+                                            disabled={isSubmitting}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-white/80 text-sm font-medium mb-2">
+                                            Team Size
+                                        </label>
+                                        <select
+                                            name="memberCount"
+                                            value={formData.memberCount}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#3182ce]"
+                                            disabled={isSubmitting}
+                                        >
+                                            <option value={1}>
+                                                1 Member (Solo)
+                                            </option>
+                                            <option value={2}>2 Members</option>
+                                            <option value={3}>3 Members</option>
+                                            <option value={4}>4 Members</option>
+                                        </select>
+                                        <p className="text-white/50 text-sm mt-1">
+                                            You can add other team members later
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                        <Phone className="w-5 h-5" />
+                                        Contact Information
+                                    </h3>
+
+                                    <div>
+                                        <label className="block text-white/80 text-sm font-medium mb-2">
+                                            Phone Number{" "}
+                                            <span className="text-red-400">
+                                                *
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter your phone number"
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
+                                            disabled={isSubmitting}
+                                            required
+                                        />
+                                        <p className="text-white/50 text-sm mt-1">
+                                            We&apos;ll use this for event
+                                            updates and coordination
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                                         <FolderOpen className="w-5 h-5" />
                                         Project Submission
                                     </h3>
+
                                     <div>
                                         <label className="block text-white/80 text-sm font-medium mb-2">
-                                            Google Drive Folder URL <span className="text-red-400">*</span>
+                                            Google Drive Folder URL{" "}
+                                            <span className="text-red-400">
+                                                *
+                                            </span>
                                         </label>
                                         <input
                                             type="url"
@@ -145,15 +417,19 @@ export default function BuildathonSubmitPage() {
                                             onChange={handleInputChange}
                                             placeholder="https://drive.google.com/drive/folders/..."
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
-                                            disabled={isSubmitting || formData.status === 'submitted'}
+                                            disabled={isSubmitting}
                                             required
                                         />
                                         <p className="text-white/50 text-sm mt-1">
-                                            Make sure the folder has view access for the organizers.
+                                            Provide your Google Drive folder
+                                            link for project submission. Make
+                                            sure it has view access for
+                                            organizers.
                                         </p>
                                     </div>
                                 </div>
 
+                                {/* Submit Button */}
                                 <div className="flex gap-4 pt-4">
                                     <Link
                                         href="/events/buildathon"
@@ -162,35 +438,41 @@ export default function BuildathonSubmitPage() {
                                         <ArrowLeft className="w-4 h-4" />
                                         Back
                                     </Link>
-                                    {formData.status !== 'submitted' && (
-                                        <button
-                                            type="submit"
-                                            disabled={isSubmitting || !formData.driveFolderUrl}
-                                            className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isSubmitting ? (
-                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                            ) : (
-                                                <CheckCircle className="w-5 h-5" />
-                                            )}
-                                            Submit Project
-                                        </button>
-                                    )}
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            isSubmitting ||
+                                            !formData.teamName ||
+                                            !formData.phone ||
+                                            !formData.driveFolderUrl
+                                        }
+                                        className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isSubmitting ? (
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        ) : (
+                                            <CheckCircle className="w-5 h-5" />
+                                        )}
+                                        Submit Project
+                                    </button>
                                 </div>
                             </form>
                         </SpotlightCard>
                     </div>
                 </section>
 
+                {/* Success Dialog */}
                 <Dialog
                     isOpen={showSuccessDialog}
-                    onClose={() => setShowSuccessDialog(false)}
+                    onClose={() => {
+                        setShowSuccessDialog(false);
+                        setSuccess(true);
+                    }}
                     title="Project Submitted!"
-                    message="Your project has been successfully submitted for Build-A-Thon 2025."
+                    message="Your Build-A-Thon 2025 project has been successfully submitted!"
                     type="success"
                 />
             </main>
         </ProtectedRoute>
     );
 }
-
