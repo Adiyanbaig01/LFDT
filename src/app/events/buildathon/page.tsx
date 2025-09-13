@@ -27,9 +27,6 @@ export default function BuildathonPage() {
     const [, setIsShortlisted] = useState(false);
     const [teamName, setTeamName] = useState("");
     const [showWaitingPage, setShowWaitingPage] = useState(false);
-    const [registrationStatus, setRegistrationStatus] = useState<
-        "registered" | "submitted" | "withdrawn" | null
-    >(null);
 
     const eventId = "buildathon-2025";
 
@@ -47,9 +44,6 @@ export default function BuildathonPage() {
                         );
                         if (registration) {
                             setTeamName(registration.team.teamName);
-                            if (registration.status) {
-                                setRegistrationStatus(registration.status);
-                            }
                         }
 
                         // Check if user is shortlisted
@@ -144,9 +138,17 @@ export default function BuildathonPage() {
                                 <Target className="w-4 h-4" />
                                 View Shortlisted
                             </button>
-                            <div className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white">
-                                <CheckCircle className="w-4 h-4" />
-                                Project Submitted
+                            <div className="group relative">
+                                <button
+                                    onClick={() =>
+                                        (window.location.href =
+                                            "/events/buildathon/submit")
+                                    }
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 transition-colors cursor-pointer"
+                                >
+                                    <CheckCircle className="w-4 h-4" />
+                                    Edit Submission
+                                </button>
                             </div>
                             <button
                                 onClick={() =>
@@ -203,7 +205,21 @@ export default function BuildathonPage() {
                             </p>
                         </div>
                         <div className="grid md:grid-cols-3 gap-6">
+                            
+
                             <SpotlightCard className="p-6 flex flex-col">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Eye className="w-6 h-6 text-[#3182ce]" />
+                                    <h3 className="text-lg font-semibold text-white">
+                                        Check Shortlist Status
+                                    </h3>
+                                </div>
+                                <p className="text-white/70 text-sm flex-grow">
+                                    Visit the shortlisted page to see if your
+                                    team made it to the next phase.
+                                </p>
+                            </SpotlightCard>
+<SpotlightCard className="p-6 flex flex-col">
                                 <div className="flex items-center gap-3 mb-3">
                                     <MessageCircle className="w-6 h-6 text-[#25D366]" />
                                     <h3 className="text-lg font-semibold text-white">
@@ -227,30 +243,6 @@ export default function BuildathonPage() {
                                     Join WhatsApp Group
                                 </button>
                             </SpotlightCard>
-
-                            <SpotlightCard className="p-6 flex flex-col">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <Eye className="w-6 h-6 text-[#3182ce]" />
-                                    <h3 className="text-lg font-semibold text-white">
-                                        Check Shortlist Status
-                                    </h3>
-                                </div>
-                                <p className="text-white/70 text-sm mb-4 flex-grow">
-                                    Visit the shortlisted page to see if your
-                                    team made it to the next phase.
-                                </p>
-                                <button
-                                    onClick={() =>
-                                        (window.location.href =
-                                            "/events/buildathon/shortlisted")
-                                    }
-                                    className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#3182ce] text-[#3182ce] rounded-lg text-sm font-medium hover:bg-[#3182ce] hover:text-white transition-all duration-200 mt-auto"
-                                >
-                                    <Eye className="w-4 h-4" />
-                                    Check Shortlist Status
-                                </button>
-                            </SpotlightCard>
-
                             <SpotlightCard className="p-6 flex flex-col">
                                 <div className="flex items-center gap-3 mb-3">
                                     <Youtube className="w-6 h-6 text-[#FF0000]" />
@@ -258,20 +250,10 @@ export default function BuildathonPage() {
                                         Live Presentations
                                     </h3>
                                 </div>
-                                <p className="text-white/70 text-sm mb-4 flex-grow">
+                                <p className="text-white/70 text-sm flex-grow">
                                     Shortlisted teams will present live. Watch
                                     the presentations here.
                                 </p>
-                                <button
-                                    onClick={() =>
-                                        (window.location.href =
-                                            "/events/buildathon/phase-2")
-                                    }
-                                    className="inline-flex items-center gap-2 px-4 py-2 border-2 border-[#FF0000] text-[#FF0000] rounded-lg text-sm font-medium hover:bg-[#FF0000] hover:text-white transition-all duration-200 mt-auto"
-                                >
-                                    <Youtube className="w-4 h-4" />
-                                    Go to Phase-2
-                                </button>
                             </SpotlightCard>
                         </div>
                     </div>

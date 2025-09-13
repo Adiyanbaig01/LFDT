@@ -20,10 +20,12 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Dialog from "@/components/ui/Dialog";
 
 export default function BuildathonSubmitPage() {
-    const { user, userData, createEventRegistration } = useAuth();
+    const { user, userData, createEventRegistration, updateEventRegistration, getEventRegistration } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [loadingExistingData, setLoadingExistingData] = useState(true);
 
     const eventId = "buildathon-2025";
 
@@ -37,15 +39,52 @@ export default function BuildathonSubmitPage() {
 
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-    // Auto-fill phone number from user profile when userData changes
+    // Load existing registration data on mount
     useEffect(() => {
-        if (userData?.profile?.phone && !formData.phone) {
+        const loadExistingRegistration = async () => {
+            if (user) {
+                try {
+                    const existingRegistration = await getEventRegistration(eventId);
+                    if (existingRegistration) {
+                        setIsEditing(true);
+                        setFormData({
+                            teamName: existingRegistration.team.teamName,
+                            memberCount: existingRegistration.team.memberCount,
+                            phone: existingRegistration.contact.phone,
+                            driveFolderUrl: existingRegistration.driveFolderUrl,
+                            githubLink: existingRegistration.githubLink,
+                        });
+                    } else {
+                        // Auto-fill phone number from user profile for new registrations
+                        if (userData?.profile?.phone) {
+                            setFormData((prev) => ({
+                                ...prev,
+                                phone: userData.profile.phone || "",
+                            }));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading existing registration:', error);
+                } finally {
+                    setLoadingExistingData(false);
+                }
+            } else {
+                setLoadingExistingData(false);
+            }
+        };
+
+        loadExistingRegistration();
+    }, [user, getEventRegistration, eventId, userData]);
+
+    // Auto-fill phone number from user profile when userData changes (for new users only)
+    useEffect(() => {
+        if (userData?.profile?.phone && !formData.phone && !isEditing) {
             setFormData((prev) => ({
                 ...prev,
                 phone: userData.profile.phone || "",
             }));
         }
-    }, [userData, formData.phone]);
+    }, [userData, formData.phone, isEditing]);
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -106,7 +145,7 @@ export default function BuildathonSubmitPage() {
             setIsSubmitting(true);
             setError(null);
 
-            await createEventRegistration(eventId, {
+            const registrationData = {
                 team: {
                     teamName: formData.teamName.trim(),
                     memberCount: formData.memberCount,
@@ -116,7 +155,19 @@ export default function BuildathonSubmitPage() {
                 },
                 driveFolderUrl: formData.driveFolderUrl?.trim() || "",
                 githubLink: formData.githubLink?.trim() || "",
-            });
+            };
+
+            if (isEditing) {
+                await updateEventRegistration(eventId, {
+                    ...registrationData,
+                    status: 'submitted'
+                });
+            } else {
+                await createEventRegistration(eventId, {
+                    ...registrationData,
+                    status: 'submitted'
+                });
+            }
 
             setShowSuccessDialog(true);
         } catch (error: any) {
@@ -127,12 +178,12 @@ export default function BuildathonSubmitPage() {
                 setError(
                     "Permission denied. Please make sure you are signed in and try again."
                 );
-            } else if (error.message?.includes("already exists")) {
+            } else if (error.message?.includes("already exists") && !isEditing) {
                 setError("You have already registered for this event.");
             } else {
                 setError(
                     error.message ||
-                        "Failed to register. Please try again later."
+                        `Failed to ${isEditing ? 'update' : 'register'}. Please try again later.`
                 );
             }
         } finally {
@@ -144,8 +195,8 @@ export default function BuildathonSubmitPage() {
         return (
             <main className="min-h-screen bg-[#0a0e13] text-white">
                 <HeroSection
-                    title="Registration Complete!"
-                    subtitle="You have successfully registered for Build-A-Thon 2025"
+                    title={isEditing ? "Update Complete!" : "Registration Complete!"}
+                    subtitle={isEditing ? "You have successfully updated your Build-A-Thon 2025 submission" : "You have successfully registered for Build-A-Thon 2025"}
                     height={500}
                 />
                 <section className="relative px-6 py-16">
@@ -156,11 +207,11 @@ export default function BuildathonSubmitPage() {
                                     <CheckCircle className="w-10 h-10 text-white" />
                                 </div>
                                 <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-                                    Welcome to Build-A-Thon 2025!
+                                    {isEditing ? "Project Updated!" : "Welcome to Build-A-Thon 2025!"}
                                 </h2>
                                 <p className="text-lg lg:text-xl text-white/70 mb-4 max-w-3xl mx-auto">
                                     Your project has been successfully
-                                    submitted! Here&apos;s what happens next:
+                                    {isEditing ? ' updated' : ' submitted'}! Here&apos;s what happens next:
                                 </p>
                                 <p className="text-sm lg:text-base text-white/60 max-w-2xl mx-auto">
                                     You will be notified if you&apos;re
@@ -206,16 +257,6 @@ export default function BuildathonSubmitPage() {
                                         Visit the shortlisted page to see if
                                         your team made it to the next phase.
                                     </p>
-                                    <button
-                                        onClick={() =>
-                                            (window.location.href =
-                                                "/events/buildathon/shortlisted")
-                                        }
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        Check Shortlist Status
-                                    </button>
                                 </div>
 
                                 <div className="bg-white/5 border border-white/10 rounded-lg p-6">
@@ -229,16 +270,6 @@ export default function BuildathonSubmitPage() {
                                         Shortlisted teams will present live.
                                         Watch the presentations here.
                                     </p>
-                                    <button
-                                        onClick={() =>
-                                            (window.location.href =
-                                                "/events/buildathon/phase-2")
-                                        }
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-colors"
-                                    >
-                                        <Youtube className="w-4 h-4" />
-                                        Watch Live Presentations
-                                    </button>
                                 </div>
                             </div>
 
@@ -268,14 +299,42 @@ export default function BuildathonSubmitPage() {
         );
     }
 
+    // Show loading state while existing data is being loaded
+    if (loadingExistingData) {
+        return (
+            <ProtectedRoute>
+                <main className="min-h-screen bg-[#0a0e13] text-white">
+                    <HeroSection
+                        title="Loading..."
+                        subtitle="Loading your registration data"
+                        height={400}
+                    />
+                    <section className="relative px-6 py-16">
+                        <div className="mx-auto max-w-2xl text-center">
+                            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-white/70">Loading your registration data...</p>
+                        </div>
+                    </section>
+                </main>
+            </ProtectedRoute>
+        );
+    }
+
     return (
         <ProtectedRoute>
             <main className="min-h-screen bg-[#0a0e13] text-white">
                 <HeroSection
-                    title="Submit Project for Build-A-Thon 2025"
-                    subtitle="Register your team and submit your project"
+                    title={isEditing ? "Edit Project Submission" : "Submit Project for Build-A-Thon 2025"}
+                    subtitle={isEditing ? "Update your team details and project information" : "Register your team and submit your project"}
                     height={400}
-                />
+                >                    
+                    {isEditing && (
+                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-600/50 rounded-lg text-green-300">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Editing existing submission</span>
+                        </div>
+                    )}
+                </HeroSection>
 
                 <section className="relative px-6 py-16 sm:py-20">
                     <div className="mx-auto max-w-2xl">
@@ -515,7 +574,7 @@ export default function BuildathonSubmitPage() {
                                         ) : (
                                             <CheckCircle className="w-5 h-5" />
                                         )}
-                                        Submit Project
+                                        {isEditing ? 'Update Project' : 'Submit Project'}
                                     </button>
                                 </div>
                             </form>
@@ -530,8 +589,8 @@ export default function BuildathonSubmitPage() {
                         setShowSuccessDialog(false);
                         setSuccess(true);
                     }}
-                    title="Project Submitted!"
-                    message="Your Build-A-Thon 2025 project has been successfully submitted!"
+                    title={isEditing ? "Project Updated!" : "Project Submitted!"}
+                    message={isEditing ? "Your Build-A-Thon 2025 project has been successfully updated!" : "Your Build-A-Thon 2025 project has been successfully submitted!"}
                     type="success"
                 />
             </main>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, Calendar, Star, Loader2, Trophy, CheckCircle } from "lucide-react";
+import { Users, Calendar, CheckCircle, Star, Trophy, Loader2 } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import SectionBackground from "@/components/ui/SectionBackground";
@@ -19,6 +19,7 @@ interface TeamData {
             phone: string;
         };
         driveFolderUrl: string;
+        githubLink: string;
         status: 'registered' | 'submitted' | 'withdrawn';
         createdAt: any;
     };
@@ -32,6 +33,40 @@ interface TeamData {
     isShortlisted: boolean;
 }
 
+function formatFirestoreDate(d: any): string | null {
+    // Supports Firestore Timestamp, {seconds, nanoseconds}, string dates, or Date
+    if (!d) return null;
+    
+    let date: Date;
+    
+    // If it's a Timestamp-like
+    if (typeof d?.toDate === 'function') {
+        try { date = d.toDate(); } catch { return null; }
+    }
+    // If it's the wire format {seconds, nanoseconds}
+    else if (typeof d?.seconds === 'number') {
+        date = new Date(d.seconds * 1000);
+    }
+    // If it's already a JS Date
+    else if (d instanceof Date) {
+        date = d;
+    }
+    // If it came as an ISO/string
+    else if (typeof d === 'string') {
+        date = new Date(d);
+        if (isNaN(date.getTime())) return null;
+    }
+    else {
+        return null;
+    }
+    
+    // Format as DD/MM/YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+}
 export default function ShortlistedTeamsPage() {
     const [teams, setTeams] = useState<TeamData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -160,18 +195,7 @@ export default function ShortlistedTeamsPage() {
                                             <div className="flex items-center gap-2 text-white/70">
                                                 <Calendar className="w-4 h-4 text-[#3182ce]" />
                                                 <span className="text-sm">
-                                                    Registered: {team.registration.createdAt?.toDate?.()?.toLocaleDateString() || "N/A"}
-                                                </span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircle className="w-4 h-4 text-green-400" />
-                                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                                    team.registration.status === "submitted" 
-                                                        ? "bg-green-900/50 text-green-300"
-                                                        : "bg-blue-900/50 text-blue-300"
-                                                }`}>
-                                                    {team.registration.status === "submitted" ? "Project Submitted" : "Registered"}
+                                                    Registered: {formatFirestoreDate(team.registration.createdAt) || "N/A"}
                                                 </span>
                                             </div>
                                         </div>
