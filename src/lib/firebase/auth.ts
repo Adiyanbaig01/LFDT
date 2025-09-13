@@ -218,6 +218,7 @@ export interface EventRegistration {
     phone: string;
   };
   driveFolderUrl: string; // Make it required but can be empty string
+  githubLink: string; // GitHub link for the project
   status: 'registered' | 'submitted' | 'withdrawn';
   createdAt: any;
   updatedAt: any;
@@ -252,6 +253,7 @@ export const createEventRegistration = async (uid: string, userEmail: string, ev
       team: registrationData.team || { teamName: '', memberCount: 1 },
       contact: registrationData.contact || { phone: '' },
       driveFolderUrl: registrationData.driveFolderUrl || '', // Ensure it's not undefined
+      githubLink: registrationData.githubLink || '', // Ensure it's not undefined
       status: 'registered',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -288,10 +290,13 @@ export const updateEventRegistration = async (uid: string, eventId: string, upda
   try {
     const registrationRef = doc(db, 'eventRegistrations', `${eventId}_${uid}`);
     
-    // Ensure driveFolderUrl is not undefined if provided
+    // Ensure driveFolderUrl and githubLink are not undefined if provided
     const safeUpdateData = { ...updateData };
     if ('driveFolderUrl' in safeUpdateData && safeUpdateData.driveFolderUrl === undefined) {
       safeUpdateData.driveFolderUrl = '';
+    }
+    if ('githubLink' in safeUpdateData && safeUpdateData.githubLink === undefined) {
+      safeUpdateData.githubLink = '';
     }
     
     await updateDoc(registrationRef, {

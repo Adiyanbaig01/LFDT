@@ -13,7 +13,8 @@ import {
     LogOut,
     CheckCircle,
     XCircle,
-    Loader2
+    Loader2,
+    Github
 } from "lucide-react";
 
 interface TeamData {
@@ -29,6 +30,7 @@ interface TeamData {
             phone: string;
         };
         driveFolderUrl: string;
+        githubLink: string;
         status: 'registered' | 'submitted' | 'withdrawn';
         createdAt: any;
     };
@@ -335,13 +337,13 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Actions */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-2">
                                 {/* View Drive */}
                                 <a
                                     href={team.registration.driveFolderUrl || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors border ${
+                                    className={`flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
                                         team.registration.driveFolderUrl
                                             ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                                             : 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed'
@@ -350,34 +352,52 @@ export default function AdminDashboard() {
                                         if (!team.registration.driveFolderUrl) e.preventDefault();
                                     }}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
                                         <path d="M10.5 3.75a.75.75 0 0 1 .75-.75h7.5A.75.75 0 0 1 19.5 3v7.5a.75.75 0 0 1-1.5 0V4.81l-6.72 6.72a.75.75 0 1 1-1.06-1.06L16.94 3.75H11.25a.75.75 0 0 1-.75-.75Z"/>
                                         <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h5.25a.75.75 0 0 1 0 1.5H5.25c-.414 0-.75.336-.75.75v12a.75.75 0 0 0 .75.75h12a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 1 1.5 0v5.25A2.25 2.25 0 0 1 17.25 21H5.25A2.25 2.25 0 0 1 3 18.75v-12Z"/>
                                     </svg>
-                                    {team.registration.driveFolderUrl ? 'View Drive' : 'No Drive Link'}
+                                    Drive
+                                </a>
+
+                                {/* View GitHub */}
+                                <a
+                                    href={team.registration.githubLink || '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                                        team.registration.githubLink
+                                            ? 'bg-purple-600/20 border-purple-600/50 text-purple-300 hover:bg-purple-600/30'
+                                            : 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed'
+                                    }`}
+                                    onClick={(e) => {
+                                        if (!team.registration.githubLink) e.preventDefault();
+                                    }}
+                                >
+                                    <Github className="w-3 h-3" />
+                                    GitHub
                                 </a>
 
                                 {/* Shortlist toggle */}
                                 <button
                                     onClick={() => handleShortlist(team.registration.userId, team.isShortlisted)}
                                     disabled={actionLoading === team.registration.userId}
-                                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                                    className={`flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                                         team.isShortlisted
                                             ? 'bg-red-600/20 border border-red-600/50 text-red-300 hover:bg-red-600/30'
                                             : 'bg-green-600/20 border border-green-600/50 text-green-300 hover:bg-green-600/30'
                                     }`}
                                 >
                                     {actionLoading === team.registration.userId ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <Loader2 className="w-3 h-3 animate-spin" />
                                     ) : team.isShortlisted ? (
                                         <>
-                                            <XCircle className="w-4 h-4" />
+                                            <XCircle className="w-3 h-3" />
                                             Remove
                                         </>
                                     ) : (
                                         <>
-                                            <CheckCircle className="w-4 h-4" />
-                                            Add to Shortlist
+                                            <CheckCircle className="w-3 h-3" />
+                                            Shortlist
                                         </>
                                     )}
                                 </button>

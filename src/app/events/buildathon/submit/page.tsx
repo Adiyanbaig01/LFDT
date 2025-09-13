@@ -32,6 +32,7 @@ export default function BuildathonSubmitPage() {
         memberCount: 1,
         phone: userData?.profile?.phone || "",
         driveFolderUrl: "",
+        githubLink: "",
     });
 
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -60,7 +61,12 @@ export default function BuildathonSubmitPage() {
         e.preventDefault();
 
         // Validation
-        if (!formData.teamName || !formData.phone || !formData.driveFolderUrl) {
+        if (
+            !formData.teamName ||
+            !formData.phone ||
+            !formData.driveFolderUrl ||
+            !formData.githubLink
+        ) {
             setError("Please fill in all required fields");
             return;
         }
@@ -84,6 +90,18 @@ export default function BuildathonSubmitPage() {
             return;
         }
 
+        // Validate GitHub URL (required)
+        if (!formData.githubLink.startsWith("http")) {
+            setError("Please enter a valid GitHub repository URL");
+            return;
+        }
+
+        // Basic GitHub URL validation
+        if (!formData.githubLink.includes("github.com")) {
+            setError("Please enter a valid GitHub repository URL");
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             setError(null);
@@ -97,6 +115,7 @@ export default function BuildathonSubmitPage() {
                     phone: formData.phone.replace(/[\s-]/g, ""), // Remove spaces and dashes
                 },
                 driveFolderUrl: formData.driveFolderUrl?.trim() || "",
+                githubLink: formData.githubLink?.trim() || "",
             });
 
             setShowSuccessDialog(true);
@@ -429,6 +448,48 @@ export default function BuildathonSubmitPage() {
                                     </div>
                                 </div>
 
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                            className="w-5 h-5"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"
+                                            />
+                                        </svg>
+                                        GitHub Repository
+                                    </h3>
+
+                                    <div>
+                                        <label className="block text-white/80 text-sm font-medium mb-2">
+                                            GitHub Repository URL{" "}
+                                            <span className="text-red-400">
+                                                *
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="url"
+                                            name="githubLink"
+                                            value={formData.githubLink}
+                                            onChange={handleInputChange}
+                                            placeholder="https://github.com/username/repository"
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#3182ce]"
+                                            disabled={isSubmitting}
+                                            required
+                                        />
+                                        <p className="text-white/50 text-sm mt-1">
+                                            Provide the GitHub repository link
+                                            for your project. Make sure
+                                            it&apos;s public and accessible to
+                                            judges.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 {/* Submit Button */}
                                 <div className="flex gap-4 pt-4">
                                     <Link
@@ -444,7 +505,8 @@ export default function BuildathonSubmitPage() {
                                             isSubmitting ||
                                             !formData.teamName ||
                                             !formData.phone ||
-                                            !formData.driveFolderUrl
+                                            !formData.driveFolderUrl ||
+                                            !formData.githubLink
                                         }
                                         className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-[#3182ce] to-[#4299e2] text-white rounded-lg font-medium hover:from-[#2c5aa0] hover:to-[#3182ce] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >

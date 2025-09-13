@@ -211,6 +211,7 @@ export function formatTeamsForCSV(teams: TeamWithUser[], shortlistedOnly: boolea
     'Member Count',
     'Status',
     'Drive Folder URL',
+    'GitHub Link',
     'Registration Date',
     'Shortlisted'
   ];
@@ -223,6 +224,7 @@ export function formatTeamsForCSV(teams: TeamWithUser[], shortlistedOnly: boolea
     team.registration.team.memberCount.toString(),
     team.registration.status,
     team.registration.driveFolderUrl || 'N/A',
+    team.registration.githubLink || 'N/A',
     team.registration.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A',
     team.isShortlisted ? 'Yes' : 'No'
   ]);
