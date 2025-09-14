@@ -60,7 +60,7 @@ export async function getAllBuildathonRegistrations(): Promise<TeamWithUser[]> {
         userData: {
           uid: registration.userId,
           email: registration.userEmail || null,
-          displayName: registration.userDisplayName || null,
+          displayName: registration.userDisplayName,
           photoURL: null,
           createdAt: registration.createdAt || null,
         },
@@ -167,7 +167,7 @@ export async function getShortlistedTeams(): Promise<TeamWithUser[]> {
           userData: {
             uid: shortlistedData.userId,
             email: shortlistedData.userEmail || null,
-            displayName: registration.userDisplayName || null,
+            displayName: registration.userDisplayName,
             photoURL: null,
             createdAt: registration.createdAt || null,
           },
@@ -218,7 +218,7 @@ export function formatTeamsForCSV(teams: TeamWithUser[], shortlistedOnly: boolea
   
   const rows = filteredTeams.map(team => [
     team.registration.team.teamName,
-    team.userData.displayName || 'N/A',
+    team.userData.displayName,
     team.userData.email || 'N/A',
     team.registration.contact.phone,
     team.registration.team.memberCount.toString(),

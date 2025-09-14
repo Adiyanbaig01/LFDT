@@ -208,7 +208,7 @@ export interface EventRegistration {
   eventId: string;
   userId: string;
   userEmail: string;
-  userDisplayName?: string; // cached leader name for admin display/export
+  userDisplayName: string; // cached leader name for admin display/export
   team: {
     teamName: string;
     memberCount: number;
@@ -235,21 +235,43 @@ export const createEventRegistration = async (uid: string, userEmail: string, ev
       throw new Error('You have already registered for this event.');
     }
     
-    // Try to pick a good display name for caching
-    let leaderName: string | undefined = undefined;
+    // Try to pick a good display name for caching with multiple fallbacks
+    let leaderName: string | null = null;
+    
+    // 1. Try from Firestore user document
     try {
       const userRef = doc(db, 'users', uid);
       const userDoc = await getDoc(userRef);
       if (userDoc.exists()) {
-        leaderName = (userDoc.data() as any).displayName || undefined;
+        const userData = userDoc.data() as any;
+        leaderName = userData.displayName;
       }
     } catch {}
+
+    // 2. Try from current Firebase Auth user
+    if (!leaderName && auth.currentUser) {
+      leaderName = auth.currentUser.displayName;
+    }
+
+    // 3. Extract name from email if still no display name
+    if (!leaderName && userEmail) {
+      const emailUsername = userEmail.split('@')[0];
+      // Convert email username to a more readable format
+      leaderName = emailUsername
+        .replace(/[._-]/g, ' ') // Replace dots, underscores, hyphens with spaces
+        .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
+    }
+
+    // 4. Last resort fallback
+    if (!leaderName) {
+      leaderName = 'Team Leader';
+    }
 
     const registration: EventRegistration = {
       eventId,
       userId: uid,
       userEmail,
-      userDisplayName: leaderName,
+      userDisplayName: leaderName, // Will always have a meaningful value now
       team: registrationData.team || { teamName: '', memberCount: 1 },
       contact: registrationData.contact || { phone: '' },
       driveFolderUrl: registrationData.driveFolderUrl || '', // Ensure it's not undefined
